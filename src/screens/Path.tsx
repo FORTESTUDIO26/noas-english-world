@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { T } from '../text/he.ts';
 import { SESSIONS, buildStep, sessionById, sessionKnown, type Step } from '../learn/path.ts';
 import { letter, type LetterId } from '../content/letters.ts';
 import { Screen } from '../ui/Screen.tsx';
@@ -17,8 +18,8 @@ export function PathScreen() {
   const { save } = useStore();
   const nextIdx = SESSIONS.findIndex((s) => !save.sessions[s.id]?.done);
   return (
-    <Screen title="המסלול שלי" tone="purple">
-      <p className="lead">שישה מפגשים קצרים. אפשר להתקדם בקצב שלך ולחזור על מפגש כמה פעמים שרוצים.</p>
+    <Screen title={T.path.title} tone="purple">
+      <p className="lead">{T.path.lead}</p>
       <ol className="path">
         {SESSIONS.map((s, i) => {
           const rec = save.sessions[s.id];
@@ -29,17 +30,17 @@ export function PathScreen() {
               <button type="button" className="path__btn" onClick={() => nav.go({ name: 'session', id: s.id })}>
                 <span className="path__n">{rec?.done ? <IconCheck size={26} /> : s.n}</span>
                 <span className="path__text">
-                  <b>מפגש {s.n}: {s.title}</b>
-                  <small>{s.goal} · כ־{s.minutes} דקות</small>
+                  <b>{T.path.meetingTitle(s.n, s.title)}</b>
+                  <small>{T.path.minutes(s.goal, s.minutes)}</small>
                   {k && (
                     <span className="path__known">
                       <span className="meter"><span style={{ width: `${(k.known / k.total) * 100}%` }} /></span>
-                      שליטה: {k.known} מתוך {k.total} מיומנויות
+                      {T.path.mastery(k.known, k.total)}
                     </span>
                   )}
-                  {rec?.done && <small className="path__last">בפעם האחרונה: {rec.lastCorrect}/{rec.lastTotal} נכונות בניסיון ראשון</small>}
+                  {rec?.done && <small className="path__last">{T.path.last(rec.lastCorrect, rec.lastTotal)}</small>}
                 </span>
-                {isNext && <span className="path__badge">הבא בתור</span>}
+                {isNext && <span className="path__badge">{T.path.nextBadge}</span>}
               </button>
             </li>
           );
@@ -70,13 +71,13 @@ export function SessionScreen({ id }: { id: string }) {
     const learned = s.steps.filter((st) => st.kind !== 'game' && st.kind !== 'review' && st.kind !== 'lab').map((st) => st.title);
     const next = SESSIONS[s.n];
     return (
-      <Screen title={`מפגש ${s.n}`} tone="purple" noSlow>
-        <RunSummary title={`מפגש ${s.n}`} r={final} onDone={() => nav.go({ name: 'path' })} doneLabel="חזרה למסלול"
+      <Screen title={T.path.meeting(s.n)} tone="purple" noSlow>
+        <RunSummary title={T.path.meeting(s.n)} r={final} onDone={() => nav.go({ name: 'path' })} doneLabel={T.summary.backToPath}
           extra={
             <div className="summary__more">
-              {learned.length > 0 && <p><b>מה למדנו:</b> {learned.join(' · ')}</p>}
-              {examScore && <p><b>מבחן לדוגמה:</b> {examScore}</p>}
-              {next && <p><b>במפגש הבא:</b> {next.title} – {next.goal}</p>}
+              {learned.length > 0 && <p><b>{T.summary.learned}</b> {learned.join(' · ')}</p>}
+              {examScore && <p><b>{T.summary.exam}</b> {examScore}</p>}
+              {next && <p><b>{T.summary.nextMeeting}</b> {next.title} – {next.goal}</p>}
             </div>
           } />
       </Screen>
@@ -85,7 +86,7 @@ export function SessionScreen({ id }: { id: string }) {
 
   if (stepIdx < 0) {
     return (
-      <Screen title={`מפגש ${s.n}`} tone="purple">
+      <Screen title={T.path.meeting(s.n)} tone="purple">
         <div className="intro">
           <Guide size={130} mood="happy" />
           <h2>{s.title}</h2>
@@ -93,7 +94,7 @@ export function SessionScreen({ id }: { id: string }) {
           <ol className="intro__steps">
             {s.steps.map((st, i) => <li key={i}>{st.title}</li>)}
           </ol>
-          <button type="button" className="btn btn--primary btn--wide" onClick={() => setStepIdx(0)}>יוצאות לדרך!</button>
+          <button type="button" className="btn btn--primary btn--wide" onClick={() => setStepIdx(0)}>{T.path.go}</button>
         </div>
       </Screen>
     );
@@ -101,7 +102,7 @@ export function SessionScreen({ id }: { id: string }) {
 
   const step = s.steps[stepIdx];
   return (
-    <Screen title={`מפגש ${s.n} · ${stepIdx + 1}/${s.steps.length}`} tone="purple">
+    <Screen title={T.path.stepOf(s.n, stepIdx + 1, s.steps.length)} tone="purple">
       <StepView key={stepIdx} step={step} save={save}
         onResults={(r) => all.current.push(...r)}
         onExam={(txt) => setExamScore(txt)}
@@ -126,7 +127,7 @@ function StepView({ step, save, onResults, onDone, onExam }: {
     case 'learnNumbers':
       return <LearnBlock title={step.title} onDone={onDone}><NumbersLearn /></LearnBlock>;
     case 'learnColors':
-      return <LearnBlock title={step.title} onDone={onDone}><p className="lead">לחצי על כל צבע ושמעי את השם שלו.</p><ColorsLearn /></LearnBlock>;
+      return <LearnBlock title={step.title} onDone={onDone}><p className="lead">{T.path.learnColors}</p><ColorsLearn /></LearnBlock>;
     case 'learnWords':
       return <LearnBlock title={step.title} onDone={onDone}><WordsLearn /></LearnBlock>;
     case 'exam':
@@ -145,7 +146,7 @@ function LearnBlock({ title, onDone, children }: { title: string; onDone: () => 
     <div className="learn-block">
       <h2 className="step-title">{title}</h2>
       {children}
-      <button type="button" className="btn btn--primary btn--wide" onClick={onDone}>המשך ←</button>
+      <button type="button" className="btn btn--primary btn--wide" onClick={onDone}>{T.common.continue}</button>
     </div>
   );
 }
@@ -160,10 +161,10 @@ function LearnLetters({ letters, title, onDone }: { letters: LetterId[]; title: 
     <div className="learn-block">
       <h2 className="step-title">{title} <span className="step-title__sub" dir="ltr">({i + 1}/{letters.length})</span></h2>
       <LetterLesson key={id} id={id} onHeard={(w) => setHeard(new Set(heard).add(`${id}:${w}`))} />
-      {!ready && <p className="hint">הקשיבי ל"שם האות" ול"הצליל של האות" כדי להמשיך</p>}
+      {!ready && <p className="hint">{T.path.needBoth}</p>}
       <button type="button" className="btn btn--primary btn--wide" disabled={!ready}
         onClick={() => (i + 1 < letters.length ? setI(i + 1) : onDone())}>
-        {i + 1 < letters.length ? `לאות הבאה: ${letter(letters[i + 1]).upper} ←` : 'המשך ←'}
+        {i + 1 < letters.length ? T.path.nextLetter(letter(letters[i + 1]).upper) : T.common.continue}
       </button>
     </div>
   );

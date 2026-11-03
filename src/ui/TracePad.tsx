@@ -2,6 +2,7 @@
 // with the letter shape: enough of the letter must be covered (coverage) and
 // most of the drawing must stay on the letter (accuracy).
 import { useEffect, useRef, useState } from 'react';
+import { T } from '../text/he.ts';
 import { IconEraser, IconCheck } from './icons.tsx';
 
 const GRID = 64;
@@ -140,7 +141,7 @@ export function TracePad({ glyph, onDone, disabled }: { glyph: string; onDone: (
           width={SIZE}
           height={SIZE}
           className="trace__ink"
-          aria-label={`ציור האות ${glyph}`}
+          aria-label={T.common.drawLetter(glyph)}
           onPointerDown={(e) => {
             if (disabled) return;
             (e.target as HTMLCanvasElement).setPointerCapture(e.pointerId);
@@ -160,8 +161,8 @@ export function TracePad({ glyph, onDone, disabled }: { glyph: string; onDone: (
         />
       </div>
       <div className="trace__actions">
-        <button type="button" className="btn btn--ghost" onClick={clear} disabled={disabled}><IconEraser /> מחיקה</button>
-        <button type="button" className="btn btn--primary" onClick={check} disabled={!hasInk || disabled}><IconCheck /> סיימתי</button>
+        <button type="button" className="btn btn--ghost" onClick={clear} disabled={disabled}><IconEraser /> {T.common.erase}</button>
+        <button type="button" className="btn btn--primary" onClick={check} disabled={!hasInk || disabled}><IconCheck /> {T.common.done}</button>
       </div>
     </div>
   );

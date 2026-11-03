@@ -16,7 +16,9 @@ export type Route =
   | { name: 'exam' }
   | { name: 'parents' }
   | { name: 'quick' }
-  | { name: 'soundcheck' };
+  | { name: 'soundcheck' }
+  | { name: 'share' }
+  | { name: 'install' };
 
 export interface Nav {
   go: (r: Route) => void;

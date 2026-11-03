@@ -1,4 +1,5 @@
 import type { Visual } from '../learn/questions.ts';
+import { T } from '../text/he.ts';
 import { color } from '../content/colors.ts';
 import { Picture } from '../art/pictures.tsx';
 import { IconSpeaker } from './icons.tsx';
@@ -14,7 +15,7 @@ export function VisualView({ v, size = 'm' }: { v: Visual; size?: 's' | 'm' | 'l
       return <span className={`vis-word vis-word--${size}`} dir="ltr" lang="en">{v.text}</span>;
     case 'color': {
       const c = color(v.id);
-      return <span className={`vis-swatch ${v.id === 'white' ? 'vis-swatch--white' : ''}`} style={{ background: c.hex }} aria-label="צבע" />;
+      return <span className={`vis-swatch ${v.id === 'white' ? 'vis-swatch--white' : ''}`} style={{ background: c.hex }} aria-label={T.common.colorSwatch} />;
     }
     case 'thing': {
       const c = color(v.id);
@@ -24,7 +25,7 @@ export function VisualView({ v, size = 'm' }: { v: Visual; size?: 's' | 'm' | 'l
       return <span className={`vis-picture vis-picture--${size}`}><Picture id={v.id} size="100%" /></span>;
     case 'count':
       return (
-        <span className="vis-count" aria-label="כמה יש?">
+        <span className="vis-count" aria-label={T.common.howMany}>
           {Array.from({ length: Math.ceil(v.n / 5) }).map((_, row) => (
             <span key={row} className="vis-count__row">
               {Array.from({ length: Math.min(5, v.n - row * 5) }).map((__, i) => (

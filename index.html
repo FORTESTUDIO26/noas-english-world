@@ -7,14 +7,24 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="אנגלית עם נועה" />
+    <meta name="apple-mobile-web-app-title" content="Noa's English" />
+    <meta name="application-name" content="Noa's English World" />
+    <meta name="description" content="עולם האנגלית של נועה, לומדים ונהנים ביחד! אותיות, מספרים, צבעים ומילים באנגלית לכיתה ג׳." />
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="./icon.svg" />
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
-    <title>אנגלית עם נועה</title>
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+    <title>Noa's English World</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Loading screen (replaced as soon as the app starts) -->
+      <div style="min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#fbf8ff;font-family:system-ui,-apple-system,sans-serif;text-align:center;padding:16px">
+        <img src="./icons/icon-192.png" width="120" height="120" alt="" style="border-radius:28px;box-shadow:0 8px 24px rgba(51,32,63,.15)" />
+        <div dir="ltr" style="font-weight:900;font-size:2rem;color:#6c32b5"><span style="color:#ff5fa8">Noa's</span> English World</div>
+        <div style="color:#6b5a78;font-weight:600">עולם האנגלית של נועה, לומדים ונהנים ביחד!</div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

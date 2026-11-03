@@ -1,7 +1,7 @@
 {
-  "name": "אנגלית עם נועה",
-  "short_name": "אנגלית",
-  "description": "לומדים אנגלית לקראת המבחן: אותיות A–P, מספרים 1–20, צבעים ומילים",
+  "name": "Noa's English World",
+  "short_name": "Noa's English",
+  "description": "עולם האנגלית של נועה, לומדים ונהנים ביחד! אותיות A–P, מספרים 1–20, צבעים ומילים באנגלית.",
   "lang": "he",
   "dir": "rtl",
   "start_url": "./",
@@ -11,8 +11,34 @@
   "background_color": "#fbf8ff",
   "theme_color": "#8e4fd9",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "id": "./",
+  "categories": [
+    "education",
+    "kids"
   ]
 }

@@ -458,3 +458,62 @@ h1, h2, h3, p { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---------- brand, profiles, share, install, update (v2) */
+#root { overflow-x: clip; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.brand { text-align: center; }
+.brand__name { font-family: var(--font-en); font-weight: 900; line-height: 1.05; color: var(--purple-d); letter-spacing: .5px; }
+.brand--l .brand__name { font-size: clamp(2rem, 9vw, 3rem); }
+.brand--s .brand__name { font-size: 1.15rem; text-align: start; }
+.brand__noa { color: var(--pink); }
+.brand__rest { background: linear-gradient(90deg, var(--purple), var(--teal)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.brand__tag { margin-top: 6px; font-size: 1.1rem; color: var(--ink-soft); font-weight: 600; }
+.welcome__note { max-width: 420px; font-size: .9rem; color: var(--ink-soft); line-height: 1.5; }
+.profile-form, .profile-pick { display: grid; gap: 12px; justify-items: center; width: min(100%, 420px); }
+.profile-form h2, .profile-pick h2 { font-size: 1.6rem; color: var(--purple-d); }
+.profile-form label { font-size: 1.1rem; text-align: center; }
+.profile-form input {
+  width: 100%; font: inherit; font-size: 1.4rem; text-align: center; padding: 14px 16px; border-radius: 18px;
+  border: 3px solid var(--purple-l); background: #fff; color: var(--ink);
+}
+.profile-form input:focus { outline: none; border-color: var(--purple); }
+.form-error { color: #b42318; font-weight: 700; }
+.profile-list { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.profile-chip { border: 0; background: #fff; border-radius: 22px; padding: 12px 18px; min-width: 120px; min-height: 64px; display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow); font-weight: 800; font-size: 1.2rem; }
+.profile-chip__avatar { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, var(--purple), var(--pink)); color: #fff; font-weight: 900; flex-shrink: 0; }
+.home__brandbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.profile-pill { border: 0; background: #fff; border-radius: 99px; padding: 4px 12px 4px 4px; display: flex; align-items: center; gap: 8px; box-shadow: 0 3px 0 #e2d6f2; min-height: 48px; max-width: 50%; }
+.profile-pill .profile-chip__avatar { width: 36px; height: 36px; }
+.profile-pill__name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.share-cta {
+  width: 100%; margin-top: 16px; border: 0; border-radius: 22px; min-height: 64px; font-size: 1.3rem; font-weight: 800; color: #fff;
+  background: linear-gradient(135deg, #ff5fa8, #ffb02e); box-shadow: 0 6px 0 #d2407f;
+}
+.share-cta:active { transform: translateY(3px); }
+.link-btn--center { display: block; margin: 8px auto 0; }
+.share-preview { white-space: pre-line; background: #fff; border-radius: 18px; padding: 14px 18px; box-shadow: var(--shadow); margin: 0; max-width: 520px; line-height: 1.6; text-align: start; overflow-wrap: anywhere; }
+.share-actions { display: grid; gap: 12px; width: min(100%, 420px); }
+.btn--whatsapp { background: #25d366; color: #fff; box-shadow: 0 5px 0 #128c4a; text-decoration: none; }
+.ok { color: #157a3c; font-weight: 700; }
+.link-field { width: min(100%, 420px); font: inherit; padding: 10px; border-radius: 12px; border: 2px solid var(--purple-l); }
+.install { display: grid; gap: 12px; }
+.install__card { background: #fff; border-radius: 20px; padding: 12px 16px; box-shadow: var(--shadow); }
+.install__card summary { font-weight: 800; font-size: 1.15rem; cursor: pointer; min-height: 40px; display: flex; align-items: center; }
+.install__card ol { margin: 8px 0 4px; padding-inline-start: 22px; line-height: 1.8; }
+.update-banner {
+  position: fixed; z-index: 50; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom));
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  background: var(--ink); color: #fff; border-radius: 18px; padding: 10px 14px; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  max-width: 560px; margin: 0 auto;
+}
+.p-profile { font-weight: 800; color: var(--purple-d); }
+.p-profiles { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.p-profiles li { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.p-profiles li .btn { margin-inline-start: auto; }
+@media (max-width: 360px) {
+  .screen__body { padding-inline: 10px; }
+  .lesson__upper { font-size: 4.4rem; }
+  .options--8 { grid-template-columns: repeat(3, 1fr); }
+  .pairs { gap: 12px 14px; }
+}

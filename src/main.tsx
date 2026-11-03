@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
 import App from './App.tsx';
+import { setupPwa } from './pwa.ts';
 import { installAudioUnlock, audio } from './audio/player.ts';
 
 installAudioUnlock();
@@ -14,10 +15,5 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 
-// Offline support: the service worker (generated at build time with the full
-// file list, incl. every audio clip) caches the whole app after first load.
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {});
-  });
-}
+// Offline support + install prompt + safe updates (see src/pwa.ts).
+setupPwa();

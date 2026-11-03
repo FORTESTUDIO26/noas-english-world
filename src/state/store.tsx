@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { saveKey } from './profiles.ts';
 import { loadSave, recordAnswer, writeSave, emptySave, type Save, type ExamRecord } from '../learn/progress.ts';
 
 interface Store {
@@ -13,18 +14,20 @@ interface Store {
 
 const Ctx = createContext<Store | null>(null);
 
-export function StoreProvider({ children }: { children: ReactNode }) {
-  const [save, setSave] = useState<Save>(() => loadSave());
+/** Progress of ONE profile. Re-mount (key={profileId}) when the profile changes. */
+export function StoreProvider({ profileId, children }: { profileId: string; children: ReactNode }) {
+  const key = saveKey(profileId);
+  const [save, setSave] = useState<Save>(() => loadSave(key));
   const ref = useRef(save);
   ref.current = save;
 
   // Write after every change; also on page hide (iOS may kill the tab).
-  useEffect(() => writeSave(save), [save]);
+  useEffect(() => writeSave(key, save), [key, save]);
   useEffect(() => {
-    const flush = () => writeSave(ref.current);
+    const flush = () => writeSave(key, ref.current);
     window.addEventListener('pagehide', flush);
     return () => window.removeEventListener('pagehide', flush);
-  }, []);
+  }, [key]);
 
   const answer = useCallback((skill: string, correct: boolean) => setSave((s) => recordAnswer(s, skill, correct)), []);
   const markOpened = useCallback((key: string) => setSave((s) => ({ ...s, opened: { ...s.opened, [key]: Date.now() } })), []);

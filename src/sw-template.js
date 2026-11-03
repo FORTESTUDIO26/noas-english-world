@@ -9,8 +9,14 @@ self.addEventListener('install', (event) => {
       for (let i = 0; i < FILES.length; i += 25) {
         await cache.addAll(FILES.slice(i, i + 25));
       }
-    }).then(() => self.skipWaiting()),
+    }),
   );
+  // The first install activates at once. Later versions wait until the user
+  // taps "update" (message below), so an open lesson is never broken.
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {

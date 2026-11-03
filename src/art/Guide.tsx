@@ -1,4 +1,4 @@
-// "פיפי" – the guide owl that walks Noa through the app.
+// The guide owl that walks Noa through the app.
 export type Mood = 'happy' | 'cheer' | 'think' | 'oops';
 
 export function Guide({ size = 120, mood = 'happy' }: { size?: number; mood?: Mood }) {
@@ -43,4 +43,3 @@ export function Guide({ size = 120, mood = 'happy' }: { size?: number; mood?: Mo
   );
 }
 
-export const GUIDE_NAME = 'פיפי';

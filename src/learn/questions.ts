@@ -6,6 +6,7 @@ import { CONFUSABLE_PAIRS, NUMBERS, numberWord } from '../content/numbers.ts';
 import { COLORS, color, type ColorId } from '../content/colors.ts';
 import { WORDS, COLORABLE, word, type WordId } from '../content/words.ts';
 import { clipId } from '../audio/clips.ts';
+import { T } from '../text/he.ts';
 import { practiceWeight, shuffle, skillKey, weightedPick, type Save, type SkillKind } from './progress.ts';
 
 export type Visual =
@@ -23,17 +24,7 @@ export type Visual =
 /** Exam / report areas. */
 export type Area = 'listening' | 'letterNames' | 'letterCase' | 'phonics' | 'writing' | 'reading' | 'numbers' | 'colors' | 'letters';
 
-export const AREA_HE: Record<Area, string> = {
-  listening: 'הבנת הנשמע',
-  letterNames: 'שמות האותיות',
-  letterCase: 'אות גדולה וקטנה',
-  phonics: 'צלילי האותיות',
-  writing: 'כתיבת אותיות',
-  reading: 'קריאת מילים',
-  numbers: 'מספרים',
-  colors: 'צבעים',
-  letters: 'אותיות',
-};
+export const AREA_HE: Record<Area, string> = T.areas;
 
 export interface Prompt {
   /** clips played automatically and with the replay button */
@@ -137,8 +128,8 @@ export function qLetterName(id: LetterId, rnd: Rnd = Math.random, pool: LetterId
   const ans = L(l.upper);
   return {
     kind: 'choice', id: qid('ln'), area: 'letterNames', skill: skillKey('letterName', id), listening: true,
-    prompt: { audio: [clipId.findLetter(id)], he: 'הקשיבי ובחרי את האות', en: `Find the letter ${l.upper}.`, helpHe: 'שומעים שם של אות באנגלית. בחרי את האות ששמעת.' },
-    ...choice(ans, others, rnd), explainHe: `זו האות ${l.upper} – שמה באנגלית נשמע כך.`, afterAudio: clipId.letterName(id), bigOptions: true,
+    prompt: { audio: [clipId.findLetter(id)], he: T.q.letterName, en: `Find the letter ${l.upper}.`, helpHe: T.q.letterNameHelp },
+    ...choice(ans, others, rnd), explainHe: T.q.letterNameExplain(l.upper), afterAudio: clipId.letterName(id), bigOptions: true,
   };
 }
 
@@ -149,9 +140,9 @@ export function qLetterSound(id: LetterId, rnd: Rnd = Math.random, pool: LetterI
   const ans = L(l.upper);
   return {
     kind: 'choice', id: qid('ls'), area: 'phonics', skill: skillKey('letterSound', id), listening: true,
-    prompt: { audio: [clipId.prompt('whichSound'), clipId.phoneme(id)], he: 'איזו אות עושה את הצליל הזה?', en: 'Which letter makes this sound?', helpHe: 'שומעים צליל קצר (לא את שם האות). איזו אות מתחילה כך מילים?' },
+    prompt: { audio: [clipId.prompt('whichSound'), clipId.phoneme(id)], he: T.q.letterSound, en: 'Which letter makes this sound?', helpHe: T.q.letterSoundHelp },
     showAudio: clipId.phoneme(id), show: { t: 'audio', clip: clipId.phoneme(id) },
-    ...choice(ans, others, rnd), explainHe: `האות ${l.upper} עושה את הצליל /${l.ipa}/ – כמו בתחילת ${l.example}.`, afterAudio: clipId.word(l.example), bigOptions: true,
+    ...choice(ans, others, rnd), explainHe: T.q.letterSoundExplain(l.upper, l.ipa, l.example), afterAudio: clipId.word(l.example), bigOptions: true,
   };
 }
 
@@ -163,17 +154,17 @@ export function qLetterLookAlike(id: LetterId, rnd: Rnd = Math.random): ChoiceQ 
   const ans = L(l.lower);
   return {
     kind: 'choice', id: qid('lk'), area: 'letterNames', skill: skillKey('letterName', id), listening: true,
-    prompt: { audio: [clipId.findLetter(id)], he: 'מצאי את האות הקטנה ששמעת', en: `Find the letter ${l.upper}.`, helpHe: 'שומעים שם של אות. חפשי את האות הקטנה. שימי לב לאותיות שנראות דומה!' },
-    ...choice(ans, others, rnd), explainHe: `${l.lower} היא האות הקטנה של ${l.upper}.`, afterAudio: clipId.letterName(id), bigOptions: true,
+    prompt: { audio: [clipId.findLetter(id)], he: T.q.lookAlike, en: `Find the letter ${l.upper}.`, helpHe: T.q.lookAlikeHelp },
+    ...choice(ans, others, rnd), explainHe: T.q.lookAlikeExplain(l.lower, l.upper), afterAudio: clipId.letterName(id), bigOptions: true,
   };
 }
 
 export function qLetterPairs(ids: LetterId[], rnd: Rnd = Math.random): PairsQ {
   return {
     kind: 'pairs', id: qid('lp'), area: 'letterCase',
-    prompt: { audio: [clipId.prompt('matchLetters')], he: 'חברי כל אות גדולה לאות הקטנה שלה', en: 'Match the big and small letters.' },
+    prompt: { audio: [clipId.prompt('matchLetters')], he: T.q.pairs, en: 'Match the big and small letters.' },
     pairs: shuffle(ids, rnd).slice(0, 4).map((id) => ({ left: L(letter(id).upper), right: L(letter(id).lower), skill: skillKey('letterCase', id), leftAudio: clipId.letterName(id) })),
-    explainHe: 'לכל אות יש צורה גדולה וצורה קטנה, ושתיהן נקראות באותו שם.',
+    explainHe: T.q.pairsExplain,
   };
 }
 
@@ -183,9 +174,9 @@ export function qUpperToLower(id: LetterId, rnd: Rnd = Math.random): ChoiceQ {
   const others = [...near, ...distractors(LETTERS.map((x) => x.id), id, 2 - near.length, rnd, (x) => near.includes(x))].map((o) => L(letter(o).lower));
   return {
     kind: 'choice', id: qid('ul'), area: 'letterCase', skill: skillKey('letterCase', id),
-    prompt: { audio: [], he: `מה האות הקטנה של ${l.upper}?` },
+    prompt: { audio: [], he: T.q.upperToLower(l.upper) },
     show: L(l.upper), showAudio: clipId.letterName(id),
-    ...choice(L(l.lower), others, rnd), explainHe: `האות הקטנה של ${l.upper} היא ${l.lower}.`, afterAudio: clipId.letterName(id), bigOptions: true,
+    ...choice(L(l.lower), others, rnd), explainHe: T.q.upperToLowerExplain(l.upper, l.lower), afterAudio: clipId.letterName(id), bigOptions: true,
   };
 }
 
@@ -203,9 +194,9 @@ export function qMissingLetter(rnd: Rnd = Math.random, range: LetterId[] = LETTE
   const others = distractors(all, ansId, 2, rnd, (x) => run.includes(x)).map((o) => L(fmt(o)));
   return {
     kind: 'choice', id: qid('ms'), area: 'letters', skill: skillKey('letterSeq', ansId),
-    prompt: { audio: [clipId.prompt('missingLetter')], he: 'איזו אות חסרה ברצף?', en: 'Which letter is missing?' },
+    prompt: { audio: [clipId.prompt('missingLetter')], he: T.q.missing, en: 'Which letter is missing?' },
     show: { t: 'seq', items: run.map((id, i) => (i === gap ? null : fmt(id))) },
-    ...choice(L(fmt(ansId)), others, rnd), explainHe: `בסדר האלף־בית באנגלית: ${run.map(fmt).join(' ')}`, afterAudio: clipId.letterName(ansId), bigOptions: true,
+    ...choice(L(fmt(ansId)), others, rnd), explainHe: T.q.missingExplain(run.map(fmt).join(' ')), afterAudio: clipId.letterName(ansId), bigOptions: true,
   };
 }
 
@@ -222,9 +213,9 @@ export function qFirstLetter(w: string, rnd: Rnd = Math.random): ChoiceQ {
   const isVocab = WORDS.some((x) => x.id === w);
   return {
     kind: 'choice', id: qid('fl'), area: 'phonics', skill: isVocab ? skillKey('wordFirst', w) : skillKey('letterSound', item.first),
-    prompt: { audio: [clipId.word(w), clipId.prompt('firstLetter')], he: 'באיזו אות מתחילה המילה?', en: 'Which letter does it start with?', helpHe: 'הקשיבי לצליל הראשון של המילה.' },
+    prompt: { audio: [clipId.word(w), clipId.prompt('firstLetter')], he: T.q.firstLetter, en: 'Which letter does it start with?', helpHe: T.q.firstLetterHelp },
     show: { t: 'picture', id: item.picture }, showAudio: clipId.word(w),
-    ...choice(L(l.lower), others, rnd), explainHe: `${w} מתחילה בצליל /${l.ipa}/ – האות ${l.upper} ${l.lower}.`, bigOptions: true,
+    ...choice(L(l.lower), others, rnd), explainHe: T.q.firstLetterExplain(w, l.ipa, l.upper, l.lower), bigOptions: true,
   };
 }
 
@@ -232,8 +223,8 @@ export function qTrace(id: LetterId, which: 'upper' | 'lower'): TraceQ {
   const l = letter(id);
   return {
     kind: 'trace', id: qid('tr'), area: 'writing', letter: id, case: which, skill: skillKey('letterWrite', id),
-    prompt: { audio: [clipId.prompt('trace'), clipId.letterName(id)], he: `עברי עם האצבע על האות ${which === 'upper' ? l.upper : l.lower}`, en: 'Trace the letter.' },
-    explainHe: 'כותבים מלמעלה למטה, לאט ובזהירות.',
+    prompt: { audio: [clipId.prompt('trace'), clipId.letterName(id)], he: T.q.trace(which === 'upper' ? l.upper : l.lower), en: 'Trace the letter.' },
+    explainHe: T.q.traceExplain,
   };
 }
 
@@ -253,7 +244,7 @@ export function qHearNumber(n: number, rnd: Rnd = Math.random, style: 'plain' | 
   const en = style === 'touch' ? `Touch number ${numberWord(n)}.` : style === 'find' ? `Find number ${numberWord(n)}.` : `${numberWord(n)}`;
   return {
     kind: 'choice', id: qid('hn'), area: 'listening', skill: skillKey('number', n), listening: true,
-    prompt: { audio: [audio], he: 'הקשיבי ובחרי את המספר', en, helpHe: 'שומעים מספר באנגלית. בחרי את הספרות של המספר ששמעת. שימי לב: מספרים עם teen בסוף הם 13–19.' },
+    prompt: { audio: [audio], he: T.q.hearNumber, en, helpHe: T.q.hearNumberHelp },
     ...choice(N(n), numberDistractors(n, optionCount - 1, rnd).map(N), rnd),
     explainHe: `${numberWord(n)} = ${n}`, afterAudio: clipId.number(n), bigOptions: true,
   };
@@ -266,9 +257,9 @@ export function qNumberContrast(pair: [number, number], rnd: Rnd = Math.random):
   const teen = Math.max(...pair);
   return {
     kind: 'choice', id: qid('nc'), area: 'listening', skill: skillKey('number', n), listening: true,
-    prompt: { audio: [clipId.number(n)], he: 'איזה מספר שמעת?', en: numberWord(n), helpHe: 'האזיני לסוף המילה: ב־teen יש צליל ארוך "טִין" בסוף.' },
+    prompt: { audio: [clipId.number(n)], he: T.q.contrast, en: numberWord(n), helpHe: T.q.contrastHelp },
     ...choice(N(n), [N(other)], rnd),
-    explainHe: teen > 12 ? `${numberWord(teen)} (${teen}) נגמר ב־teen – "טִין" ארוך. ${numberWord(Math.min(...pair))} (${Math.min(...pair)}) קצר יותר.` : `${numberWord(n)} = ${n}`,
+    explainHe: teen > 12 ? T.q.contrastExplain(numberWord(teen), teen, numberWord(Math.min(...pair)), Math.min(...pair)) : `${numberWord(n)} = ${n}`,
     afterAudio: clipId.number(other), bigOptions: true,
   };
 }
@@ -278,9 +269,9 @@ export function qCount(n: number, rnd: Rnd = Math.random): ChoiceQ {
   const others = shuffle([n - 2, n - 1, n + 1, n + 2].filter((x) => x >= 1 && x <= 20), rnd).slice(0, 2);
   return {
     kind: 'choice', id: qid('cn'), area: 'numbers', skill: skillKey('count', n),
-    prompt: { audio: [clipId.prompt('countHowMany')], he: 'ספרי – כמה יש?', en: 'Count. How many?' },
+    prompt: { audio: [clipId.prompt('countHowMany')], he: T.q.count, en: 'Count. How many?' },
     show: { t: 'count', n, thing },
-    ...choice(N(n), others.map(N), rnd), explainHe: `יש ${n} – ${numberWord(n)}.`, afterAudio: clipId.number(n), bigOptions: true,
+    ...choice(N(n), others.map(N), rnd), explainHe: T.q.countExplain(n, numberWord(n)), afterAudio: clipId.number(n), bigOptions: true,
   };
 }
 
@@ -288,7 +279,7 @@ export function qNumberWord(n: number, rnd: Rnd = Math.random): ChoiceQ {
   const others = numberDistractors(n, 2, rnd).map((o) => ({ t: 'word', text: numberWord(o) }) as Visual);
   return {
     kind: 'choice', id: qid('nw'), area: 'numbers', skill: skillKey('numberRead', n),
-    prompt: { audio: [], he: 'איזו מילה מתאימה למספר?' },
+    prompt: { audio: [], he: T.q.numberWord },
     show: N(n), showAudio: clipId.number(n),
     ...choice({ t: 'word', text: numberWord(n) }, others, rnd), explainHe: `${n} = ${numberWord(n)}`, afterAudio: clipId.number(n),
   };
@@ -298,9 +289,9 @@ export function qNumberWord(n: number, rnd: Rnd = Math.random): ChoiceQ {
 export function qNumberMemory(ns: number[]): PairsQ {
   return {
     kind: 'pairs', id: qid('nm'), area: 'listening', listening: true,
-    prompt: { audio: [], he: 'לחצי על רמקול, הקשיבי, וחברי אותו למספר הנכון', helpHe: 'כל רמקול אומר מספר אחר. אפשר להקשיב כמה פעמים שרוצים.' },
+    prompt: { audio: [], he: T.q.memory, helpHe: T.q.memoryHelp },
     pairs: ns.slice(0, 4).map((n) => ({ left: { t: 'audio', clip: clipId.number(n) }, right: N(n), skill: skillKey('number', n), leftAudio: clipId.number(n) })),
-    explainHe: 'כל הכבוד על ההקשבה!',
+    explainHe: T.q.memoryExplain,
   };
 }
 
@@ -312,7 +303,7 @@ export function qHearColor(id: ColorId, rnd: Rnd = Math.random, style: 'plain' |
   const vis = (x: ColorId): Visual => (asThings ? { t: 'thing', id: x } : { t: 'color', id: x });
   return {
     kind: 'choice', id: qid('hc'), area: 'listening', skill: skillKey('color', id), listening: true,
-    prompt: { audio: [style === 'choose' ? clipId.chooseColor(id) : clipId.color(id)], he: 'הקשיבי ובחרי את הצבע', en: style === 'choose' ? `Choose the ${id} color.` : id, helpHe: 'שומעים שם של צבע באנגלית. לחצי על הצבע ששמעת.' },
+    prompt: { audio: [style === 'choose' ? clipId.chooseColor(id) : clipId.color(id)], he: T.q.hearColor, en: style === 'choose' ? `Choose the ${id} color.` : id, helpHe: T.q.hearColorHelp },
     ...choice(vis(id), others.map(vis), rnd), explainHe: `${id} = ${c.he}`, afterAudio: clipId.color(id),
   };
 }
@@ -321,7 +312,7 @@ export function qColorWord(id: ColorId, rnd: Rnd = Math.random): ChoiceQ {
   const others = distractors(COLORS.map((x) => x.id), id, 2, rnd).map((o) => ({ t: 'word', text: o }) as Visual);
   return {
     kind: 'choice', id: qid('cw'), area: 'colors', skill: skillKey('colorRead', id),
-    prompt: { audio: [], he: 'איזו מילה היא שם הצבע?' },
+    prompt: { audio: [], he: T.q.colorWord },
     show: { t: 'color', id }, showAudio: clipId.color(id),
     ...choice({ t: 'word', text: id }, others, rnd), explainHe: `${id} = ${color(id).he}`, afterAudio: clipId.color(id),
   };
@@ -334,7 +325,7 @@ export function qPaint(targets: { thing: WordId; color: ColorId }[], rnd: Rnd = 
   const en = targets.map((t, i) => `${i === 0 ? 'Color' : 'Now color'} the ${t.thing} ${t.color}.`).join(' ');
   return {
     kind: 'paint', id: qid('pt'), area: 'listening', listening: true,
-    prompt: { audio, he: targets.length > 1 ? 'הקשיבי – יש שתי הוראות! צבעי לפי ההוראות' : 'הקשיבי וצבעי לפי ההוראה', en, helpHe: targets.length > 1 ? 'יש שני חלקים להוראה: קודם חפץ אחד בצבע אחד, ואז (Now) חפץ שני בצבע אחר. בחרי צבע ואז לחצי על החפץ.' : 'ההוראה אומרת איזה חפץ לצבוע ובאיזה צבע. בחרי צבע ואז לחצי על החפץ.' },
+    prompt: { audio, he: targets.length > 1 ? T.q.paintTwo : T.q.paintOne, en, helpHe: targets.length > 1 ? T.q.paintTwoHelp : T.q.paintOneHelp },
     targets: targets.map((t) => ({ ...t, skill: targets.length > 1 ? skillKey('listen2', `${t.thing}-${t.color}`) : skillKey('color', t.color) })),
     palette,
     explainHe: targets.map((t) => `${t.thing} (${word(t.thing).he}) – ${t.color} (${color(t.color).he})`).join(' · '),
@@ -351,7 +342,7 @@ export function qWordToPicture(w: WordId, rnd: Rnd = Math.random): ChoiceQ {
   const others = distractors(WORDS.map((x) => x.id), w, 2, rnd).map(PIC);
   return {
     kind: 'choice', id: qid('wp'), area: 'reading', skill: skillKey('word', w),
-    prompt: { audio: [], he: 'קראי את המילה ובחרי את התמונה המתאימה' },
+    prompt: { audio: [], he: T.q.wordToPicture },
     show: W(w),
     ...choice(PIC(w), others, rnd), explainHe: `${w} = ${word(w).he}`, afterAudio: clipId.word(w),
   };
@@ -364,7 +355,7 @@ export function qPictureToWord(w: WordId, rnd: Rnd = Math.random): ChoiceQ {
   const others = shuffle(pool, rnd).slice(0, 2).map(W);
   return {
     kind: 'choice', id: qid('pw'), area: 'reading', skill: skillKey('word', w),
-    prompt: { audio: [], he: 'מה כתוב? בחרי את המילה שמתאימה לתמונה' },
+    prompt: { audio: [], he: T.q.pictureToWord },
     show: PIC(w),
     ...choice(W(w), others, rnd), explainHe: `${w} = ${word(w).he}`, afterAudio: clipId.word(w),
   };
@@ -374,7 +365,7 @@ export function qHearWord(w: WordId, rnd: Rnd = Math.random): ChoiceQ {
   const others = distractors(WORDS.map((x) => x.id), w, 2, rnd).map(PIC);
   return {
     kind: 'choice', id: qid('hw'), area: 'listening', skill: skillKey('wordListen', w), listening: true,
-    prompt: { audio: [clipId.word(w)], he: 'הקשיבי ובחרי את התמונה', en: w, helpHe: 'שומעים מילה באנגלית. לחצי על התמונה שלה.' },
+    prompt: { audio: [clipId.word(w)], he: T.q.hearWord, en: w, helpHe: T.q.hearWordHelp },
     ...choice(PIC(w), others, rnd), explainHe: `${w} = ${word(w).he}`, afterAudio: clipId.word(w),
   };
 }
@@ -383,7 +374,7 @@ export function qHearWhichWord(w: WordId, rnd: Rnd = Math.random): ChoiceQ {
   const q = qPictureToWord(w, rnd);
   return {
     ...q, id: qid('ww'), listening: true, show: undefined,
-    prompt: { audio: [clipId.word(w)], he: 'הקשיבי – איזו מילה שמעת?', en: w, helpHe: 'קראי את שלוש המילים, והקשיבי למילה. איזו מהן שמעת?' },
+    prompt: { audio: [clipId.word(w)], he: T.q.whichWord, en: w, helpHe: T.q.whichWordHelp },
   };
 }
 
@@ -394,7 +385,7 @@ export function qWordGap(w: WordId, rnd: Rnd = Math.random): ChoiceQ {
   const others = distractors(LETTERS.map((x) => x.id), ch as LetterId, 2, rnd, (x) => letters.includes(x)).map((o) => L(o));
   return {
     kind: 'choice', id: qid('wg'), area: 'reading', skill: skillKey('wordSpell', w),
-    prompt: { audio: [clipId.word(w)], he: 'איזו אות חסרה במילה?', en: 'Which letter is missing?' },
+    prompt: { audio: [clipId.word(w)], he: T.q.wordGap, en: 'Which letter is missing?' },
     show: { t: 'gap', word: w, gap: i }, showAudio: clipId.word(w),
     ...choice(L(ch), others, rnd), explainHe: `${w} – ${letters.join(' ')}`, afterAudio: clipId.word(w), bigOptions: true,
   };

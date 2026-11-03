@@ -46,15 +46,14 @@ export interface Save {
   settings: { slow: boolean };
 }
 
-const KEY = 'noa-english:save';
 
 export function emptySave(): Save {
   return { v: 1, skills: {}, sessions: {}, exams: [], opened: {}, settings: { slow: false } };
 }
 
-export function loadSave(storage: Pick<Storage, 'getItem'> = localStorage): Save {
+export function loadSave(key: string, storage: Pick<Storage, 'getItem'> = localStorage): Save {
   try {
-    const raw = storage.getItem(KEY);
+    const raw = storage.getItem(key);
     if (!raw) return emptySave();
     const s = JSON.parse(raw) as Partial<Save>;
     if (s.v !== 1) return emptySave();
@@ -65,9 +64,9 @@ export function loadSave(storage: Pick<Storage, 'getItem'> = localStorage): Save
   }
 }
 
-export function writeSave(save: Save, storage: Pick<Storage, 'setItem'> = localStorage) {
+export function writeSave(key: string, save: Save, storage: Pick<Storage, 'setItem'> = localStorage) {
   try {
-    storage.setItem(KEY, JSON.stringify(save));
+    storage.setItem(key, JSON.stringify(save));
   } catch {
     /* storage full / private mode */
   }

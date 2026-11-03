@@ -1,5 +1,6 @@
 // Interactive task bodies: pairs matching and colouring by instruction.
 import { useMemo, useState } from 'react';
+import { T } from '../text/he.ts';
 import type { PairsQ, PaintQ } from '../learn/questions.ts';
 import { shuffle } from '../learn/progress.ts';
 import { COLORABLE, type WordId } from '../content/words.ts';
@@ -76,7 +77,7 @@ export function PairsBoard({ q, mode, onFirst, onDone }: {
           <button key={i} type="button"
             className={`tile tile--pair ${sel === i ? 'is-selected' : ''} ${matched.has(i) ? 'is-correct' : ''} ${examPicks.has(i) ? 'is-done' : ''}`}
             onClick={() => pickLeft(i)} aria-pressed={sel === i}
-            aria-label={p.left.t === 'audio' ? 'רמקול – לחצי להקשבה' : undefined}>
+            aria-label={p.left.t === 'audio' ? T.common.speakerCard : undefined}>
             <VisualView v={p.left} size="m" />
           </button>
         ))}
@@ -90,8 +91,8 @@ export function PairsBoard({ q, mode, onFirst, onDone }: {
           </button>
         ))}
       </div>
-      {!exam && lastWrong && <p className="hint" dir="rtl">לא מתאים – נסי שוב 💜</p>}
-      {sel === null && matched.size === 0 && examPicks.size === 0 && <p className="hint" dir="rtl">לחצי קודם על כרטיס בצד שמאל, ואז על הכרטיס המתאים</p>}
+      {!exam && lastWrong && <p className="hint" dir="rtl">{T.feedback.pairsWrong}</p>}
+      {sel === null && matched.size === 0 && examPicks.size === 0 && <p className="hint" dir="rtl">{T.feedback.pairsHint}</p>}
     </div>
   );
 }
@@ -145,23 +146,23 @@ export function PaintTask({ q, mode, onFirst, onDone }: {
               setPaint({ ...paint, [w]: brush });
               if (state === 'wrong') setState('work');
             }}
-            aria-label="חפץ לצביעה">
+            aria-label={T.common.thingToPaint}>
             <Picture id={w} size="100%" paint={paint[w] ? color(paint[w]!).hex : BLANK} />
           </button>
         ))}
       </div>
-      <div className="paint__palette" role="radiogroup" aria-label="צבעים">
+      <div className="paint__palette" role="radiogroup" aria-label={T.common.colors}>
         {q.palette.map((c) => (
-          <button key={c} type="button" role="radio" aria-checked={brush === c} aria-label="צבע"
+          <button key={c} type="button" role="radio" aria-checked={brush === c} aria-label={T.common.colorSwatch}
             className={`paint__color ${brush === c ? 'is-on' : ''} ${c === 'white' ? 'is-white' : ''}`}
             style={{ background: color(c).hex }} disabled={locked} onClick={() => setBrush(c)} />
         ))}
       </div>
       {!locked && (
         <div className="row-center">
-          {!brush && <p className="hint">בחרי צבע, ואז לחצי על החפץ</p>}
-          {state === 'wrong' && <p className="hint hint--oops">כמעט! הקשיבי שוב ותקני</p>}
-          <button type="button" className="btn btn--primary" disabled={!Object.keys(paint).length} onClick={evaluate}>בדיקה</button>
+          {!brush && <p className="hint">{T.feedback.paintHint}</p>}
+          {state === 'wrong' && <p className="hint hint--oops">{T.feedback.paintAlmost}</p>}
+          <button type="button" className="btn btn--primary" disabled={!Object.keys(paint).length} onClick={evaluate}>{T.common.check}</button>
         </div>
       )}
     </div>

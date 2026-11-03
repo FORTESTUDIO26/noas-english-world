@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { T } from '../text/he.ts';
 import type { ChoiceQ, Question } from '../learn/questions.ts';
 import { letter } from '../content/letters.ts';
 import { audio } from '../audio/player.ts';
@@ -13,9 +14,9 @@ import { Guide } from '../art/Guide.tsx';
 
 export type { Mode, SkillResult };
 
-const PRAISE = ['כל הכבוד!', 'מצוין!', 'יופי של הקשבה!', 'נהדר!', 'בדיוק!'];
+const PRAISE = T.feedback.praise;
 
-export function QuestionView({ q, mode, onAnswered, onNext, nextLabel = 'הבא', autoPlay = true }: {
+export function QuestionView({ q, mode, onAnswered, onNext, nextLabel = T.common.next, autoPlay = true }: {
   q: Question;
   mode: Mode;
   /** first-try evidence for each skill in the question (called once) */
@@ -72,14 +73,14 @@ export function QuestionView({ q, mode, onAnswered, onNext, nextLabel = 'הבא'
   return (
     <div className={`question question--${q.kind}`}>
       <div className="prompt">
-        {q.prompt.audio.length > 0 && <Speaker clips={q.prompt.audio} size="l" withSlow label="שוב" />}
+        {q.prompt.audio.length > 0 && <Speaker clips={q.prompt.audio} size="l" withSlow label={T.common.again} />}
         <div className="prompt__text">
           <p className="prompt__he">{q.prompt.he}</p>
           {q.prompt.en && !hideEn && <p className="prompt__en" dir="ltr" lang="en">{q.prompt.en}</p>}
-          {q.prompt.en && hideEn && <p className="prompt__en prompt__en--hidden" aria-hidden>🎧 Listen…</p>}
+          {q.prompt.en && hideEn && <p className="prompt__en prompt__en--hidden" aria-hidden>{T.common.listenHidden}</p>}
         </div>
         {helpAllowed && q.prompt.helpHe && !finished && (
-          <button type="button" className="btn btn--icon" onClick={() => setShowHelp((x) => !x)} aria-expanded={showHelp} aria-label="עזרה בעברית">
+          <button type="button" className="btn btn--icon" onClick={() => setShowHelp((x) => !x)} aria-expanded={showHelp} aria-label={T.common.helpHe}>
             <IconHelp />
           </button>
         )}
@@ -101,7 +102,7 @@ export function QuestionView({ q, mode, onAnswered, onNext, nextLabel = 'הבא'
         <div className={`after after--${finished}`} role="status">
           <Guide size={64} mood={finished === 'right' ? 'cheer' : 'think'} />
           <div className="after__text">
-            <strong>{finished === 'right' ? PRAISE[Math.floor(Math.random() * PRAISE.length)] : 'בואי נלמד את זה:'}</strong>
+            <strong>{finished === 'right' ? PRAISE[Math.floor(Math.random() * PRAISE.length)] : T.feedback.learnIt}</strong>
             {q.listening && q.prompt.en && <span className="after__en" dir="ltr" lang="en">{q.prompt.en}</span>}
             <span>{explainOf(q)}</span>
           </div>
@@ -147,7 +148,7 @@ function ChoiceBody({ q, mode, report, done, finished }: {
       {q.show && (
         <div className="show">
           {q.showAudio ? (
-            <button type="button" className="show__btn" onClick={() => void audio.play(q.showAudio!)} aria-label="לחצי כדי לשמוע">
+            <button type="button" className="show__btn" onClick={() => void audio.play(q.showAudio!)} aria-label={T.common.tapToHear}>
               <VisualView v={q.show} size="l" />
             </button>
           ) : (
@@ -167,7 +168,7 @@ function ChoiceBody({ q, mode, report, done, finished }: {
           ].join(' ');
           return (
             <button key={i} type="button" className={cls} onClick={() => choose(i)} disabled={!!finished && !(!exam && isAnswer)}
-              aria-label={o.t === 'color' || o.t === 'thing' || o.t === 'picture' ? `אפשרות ${i + 1}` : undefined}>
+              aria-label={o.t === 'color' || o.t === 'thing' || o.t === 'picture' ? T.common.option(i + 1) : undefined}>
               <VisualView v={o} size={q.bigOptions ? 'l' : 'm'} />
             </button>
           );
@@ -196,7 +197,7 @@ function TraceBody({ q, mode, report, done, finished }: {
         if (tries === 0) report([{ skill: q.skill, correct: s.ok }]);
         setTries(tries + 1);
         if (s.ok || mode === 'exam') { done(s.ok ? 'right' : 'revealed', clipId.letterName(q.letter)); return; }
-        setMsg(s.coverage < 0.6 ? 'כמעט! עברי על כל חלקי האות' : 'נסי להישאר בתוך הקווים');
+        setMsg(s.coverage < 0.6 ? T.letters.traceMore : T.letters.traceInside);
         if (tries + 1 >= 3) done('revealed');
         else setKey((k) => k + 1);
       }} />

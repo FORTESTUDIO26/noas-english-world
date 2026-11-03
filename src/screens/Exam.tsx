@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { T } from '../text/he.ts';
 import { buildExam, AREA_HE, type Area, type Question } from '../learn/questions.ts';
 import { letter } from '../content/letters.ts';
 import { useStore } from '../state/store.tsx';
@@ -16,7 +17,7 @@ export interface ExamOutcome { score: number; results: SkillResult[] }
 export function ExamScreen() {
   const nav = useNav();
   return (
-    <Screen title="מבחן לדוגמה" tone="blue" noSlow>
+    <Screen title={T.exam.title} tone="blue" noSlow>
       <ExamFlow onExit={() => nav.back()} />
     </Screen>
   );
@@ -57,16 +58,16 @@ export function ExamFlow({ onExit, onComplete }: { onExit: () => void; onComplet
     return (
       <div className="intro">
         <Guide size={120} mood="think" />
-        <h2>מבחן לדוגמה</h2>
-        <p>{questions.length} שאלות, כמו במבחן בכיתה: הבנת הנשמע, שמות אותיות, אות גדולה וקטנה, צלילים, כתיבה וקריאת מילים.</p>
-        <p className="hint">במבחן אין רמזים ואין תרגום. בכל שאלה אפשר להקשיב שוב להוראה כמה שרוצים. בסוף תראי מה היה נכון.</p>
-        <button type="button" className="btn btn--primary btn--wide" onClick={() => setPhase('run')}>מתחילות</button>
+        <h2>{T.exam.title}</h2>
+        <p>{T.exam.intro(questions.length)}</p>
+        <p className="hint">{T.exam.rules}</p>
+        <button type="button" className="btn btn--primary btn--wide" onClick={() => setPhase('run')}>{T.exam.start}</button>
       </div>
     );
   }
 
   if (phase === 'retry') {
-    return <GameRunner questions={retryQs} title="תיקון טעויות" mode="practice" onExit={() => setPhase('done')} onFinish={() => setPhase('done')} finishLabel="חזרה לתוצאות" />;
+    return <GameRunner questions={retryQs} title={T.exam.retryTitle} mode="practice" onExit={() => setPhase('done')} onFinish={() => setPhase('done')} finishLabel={T.exam.backToResults} />;
   }
 
   if (phase === 'done') {
@@ -77,8 +78,8 @@ export function ExamFlow({ onExit, onComplete }: { onExit: () => void; onComplet
     return (
       <div className="exam-result">
         <Guide size={110} mood={score >= 80 ? 'cheer' : 'happy'} />
-        <h2>הציון שלך: <span className="exam-result__score" dir="ltr">{score}</span></h2>
-        <p>{correct} מתוך {final.length} שאלות נכונות</p>
+        <h2>{T.exam.score} <span className="exam-result__score" dir="ltr">{score}</span></h2>
+        <p>{T.exam.correctOf(correct, final.length)}</p>
         <table className="area-table">
           <tbody>
             {areas.map((a) => {
@@ -96,16 +97,16 @@ export function ExamFlow({ onExit, onComplete }: { onExit: () => void; onComplet
         </table>
         {mistakes.length > 0 && (
           <section className="mistakes">
-            <h3>מה כדאי לתקן</h3>
+            <h3>{T.exam.fix}</h3>
             <ul>
               {mistakes.map((m, k) => (
                 <li key={k} className="mistake">
                   <span className="mistake__area">{AREA_HE[m.q.area]}</span>
                   <span className="mistake__q">{m.q.prompt.he}</span>
                   {m.q.prompt.en && <span className="mistake__en" dir="ltr" lang="en">{m.q.prompt.en}</span>}
-                  <span className="mistake__answer">התשובה הנכונה: <CorrectAnswer q={m.q} /></span>
+                  <span className="mistake__answer">{T.exam.rightAnswer} <CorrectAnswer q={m.q} /></span>
                   {m.q.kind !== 'paint' && <span className="mistake__why">{m.q.explainHe}</span>}
-                  {m.q.prompt.audio.length > 0 && <Speaker clips={m.q.prompt.audio} size="s" label="להקשיב שוב" />}
+                  {m.q.prompt.audio.length > 0 && <Speaker clips={m.q.prompt.audio} size="s" label={T.exam.listenAgain} />}
                 </li>
               ))}
             </ul>
@@ -116,13 +117,13 @@ export function ExamFlow({ onExit, onComplete }: { onExit: () => void; onComplet
             <button type="button" className="btn btn--primary" onClick={() => {
               setRetryQs(mistakes.map((m) => ({ ...m.q, id: `${m.q.id}-r${Date.now()}` }) as Question));
               setPhase('retry');
-            }}>לתרגל רק את הטעויות</button>
+            }}>{T.exam.retry}</button>
           )}
-          <button type="button" className="btn btn--ghost" onClick={() => { res.current = []; setI(0); setRound(round + 1); setPhase('intro'); }}>מבחן חדש</button>
+          <button type="button" className="btn btn--ghost" onClick={() => { res.current = []; setI(0); setRound(round + 1); setPhase('intro'); }}>{T.exam.newExam}</button>
           {onComplete ? (
-            <button type="button" className="btn btn--ghost" onClick={() => onComplete({ score, results: final.flatMap((r) => r.results) })}>סיום המפגש</button>
+            <button type="button" className="btn btn--ghost" onClick={() => onComplete({ score, results: final.flatMap((r) => r.results) })}>{T.exam.finishMeeting}</button>
           ) : (
-            <button type="button" className="btn btn--ghost" onClick={onExit}>יציאה</button>
+            <button type="button" className="btn btn--ghost" onClick={onExit}>{T.common.exit}</button>
           )}
         </div>
       </div>
@@ -133,7 +134,7 @@ export function ExamFlow({ onExit, onComplete }: { onExit: () => void; onComplet
   return (
     <div className="runner runner--exam">
       <div className="runner__top">
-        <span className="runner__title">מבחן · {AREA_HE[q.area]}</span>
+        <span className="runner__title">{T.exam.running(AREA_HE[q.area])}</span>
         <div className="progress"><span style={{ width: `${(i / questions.length) * 100}%` }} /></div>
         <span className="runner__count" dir="ltr">{i + 1}/{questions.length}</span>
       </div>

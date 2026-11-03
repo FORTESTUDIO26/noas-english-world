@@ -15,6 +15,8 @@ import {
 import { emptySave, loadSave, mastery, recordAnswer, writeSave, type Save } from './learn/progress.ts';
 import { SESSIONS, buildReview, buildStep } from './learn/path.ts';
 import { PICTURE_IDS } from './art/pictures.tsx';
+import { addProfile, checkName, deleteProfile, loadProfiles, saveKey, selectProfile } from './state/profiles.ts';
+import { T, BRAND } from './text/he.ts';
 
 const PUB = path.resolve(__dirname, '..', 'public');
 const exists = (p: string) => fs.existsSync(path.join(PUB, p)) && fs.statSync(path.join(PUB, p)).size > 500;
@@ -182,13 +184,13 @@ describe('9. progress is saved', () => {
     const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
     let s = recordAnswer(emptySave(), 'number:13', true);
     s = { ...s, sessions: { s1: { done: true, runs: 1, lastCorrect: 5, lastTotal: 6 } } };
-    writeSave(s, storage);
-    const back = loadSave(storage);
+    writeSave('k1', s, storage);
+    const back = loadSave('k1', storage);
     expect(back.skills['number:13'].c).toBe(1);
     expect(back.sessions.s1.done).toBe(true);
   });
   it('a broken save does not crash the app', () => {
-    expect(loadSave({ getItem: () => '{bad json' }).v).toBe(1);
+    expect(loadSave('k', { getItem: () => '{bad json' }).v).toBe(1);
   });
 });
 
@@ -215,5 +217,124 @@ describe('12. the sample test stays inside the official material', () => {
     const save = emptySave();
     for (const s of SESSIONS) for (const st of s.steps) buildStep(st, save).forEach(inScope);
     buildReview(save, 12).forEach(inScope);
+  });
+});
+
+// ------------------------------------------------------------------ v2: profiles, language, branding
+
+function memStorage() {
+  const m = new Map<string, string>();
+  return {
+    getItem: (k: string) => m.get(k) ?? null,
+    setItem: (k: string, v: string) => void m.set(k, v),
+    removeItem: (k: string) => void m.delete(k),
+    keys: () => [...m.keys()],
+  };
+}
+
+describe('profiles', () => {
+  it('creates profiles with their own separate progress, kept after reload', () => {
+    const st = memStorage();
+    const a = addProfile('נועה', st);
+    const b = addProfile('עידו', st);
+    writeSave(saveKey(a.id), recordAnswer(emptySave(), 'number:13', true), st);
+    writeSave(saveKey(b.id), recordAnswer(emptySave(), 'number:13', false), st);
+    // "reload": read everything again from storage
+    const p = loadProfiles(st);
+    expect(p.list.map((x) => x.name)).toEqual(['נועה', 'עידו']);
+    expect(p.current).toBe(b.id);
+    expect(loadSave(saveKey(a.id), st).skills['number:13'].c).toBe(1);
+    expect(loadSave(saveKey(b.id), st).skills['number:13'].c).toBe(0);
+    selectProfile(a.id, st);
+    expect(loadProfiles(st).current).toBe(a.id);
+  });
+  it('deleting one profile keeps the others and their progress', () => {
+    const st = memStorage();
+    const a = addProfile('א', st);
+    const b = addProfile('ב', st);
+    writeSave(saveKey(a.id), recordAnswer(emptySave(), 'color:pink', true), st);
+    writeSave(saveKey(b.id), recordAnswer(emptySave(), 'color:blue', true), st);
+    deleteProfile(a.id, st);
+    const p = loadProfiles(st);
+    expect(p.list.map((x) => x.id)).toEqual([b.id]);
+    expect(st.getItem(saveKey(a.id))).toBeNull();
+    expect(loadSave(saveKey(b.id), st).skills['color:blue'].c).toBe(1);
+  });
+  it('validates names (no empty, max 20, no duplicates)', () => {
+    const st = memStorage();
+    addProfile('Ido', st);
+    const list = loadProfiles(st).list;
+    expect(checkName('  ', list)).toBe('empty');
+    expect(checkName('x'.repeat(21), list)).toBe('tooLong');
+    expect(checkName('ido', list)).toBe('taken');
+    expect(checkName('נועה', list)).toBeNull();
+  });
+  it('moves a save from the first version into a profile instead of losing it', () => {
+    const st = memStorage();
+    st.setItem('noa-english:save', JSON.stringify(recordAnswer(emptySave(), 'word:cat', true)));
+    const p = loadProfiles(st);
+    expect(p.list).toHaveLength(1);
+    expect(loadSave(saveKey(p.list[0].id), st).skills['word:cat'].c).toBe(1);
+    expect(st.getItem('noa-english:save')).toBeNull();
+  });
+});
+
+/** Every Hebrew string the interface can show (static texts + all generated questions). */
+function allHebrewTexts(): string[] {
+  const out: string[] = [];
+  const walk = (v: unknown) => {
+    if (typeof v === 'string') out.push(v);
+    else if (typeof v === 'function') {
+      try { out.push(String((v as (...a: unknown[]) => unknown)('X', 'Y', 'Z', 'W'))); } catch { /* ignore */ }
+      try { out.push(String((v as (...a: unknown[]) => unknown)(3, 4, 5, 6))); } catch { /* ignore */ }
+    } else if (v && typeof v === 'object') Object.values(v).forEach(walk);
+  };
+  walk(T);
+  const save = emptySave();
+  const games: GameId[] = ['letterName', 'letterSound', 'letterLook', 'letterPairs', 'missingLetter', 'firstLetter', 'trace', 'hearNumber', 'teens', 'count', 'numberWord', 'numberMemory', 'hearColor', 'findColor', 'colorWord', 'paint', 'wordPicture', 'pictureWord', 'hearWord', 'whichWord', 'wordFirst', 'wordGap'];
+  for (const g of games) for (const q of buildGame(g, save, 10, { rnd: rng(5) })) {
+    out.push(q.prompt.he, q.prompt.helpHe ?? '', q.explainHe);
+  }
+  for (const s of SESSIONS) out.push(s.title, s.goal, ...s.steps.map((x) => x.title));
+  return out;
+}
+
+describe('language: suitable for boys and girls', () => {
+  // Feminine-only forms that the first version used (imperatives, adjectives, plural-feminine).
+  const FEMININE = /(^|[\s"(])(הקשיבי|בחרי|לחצי|עברי|נסי|צבעי|קראי|ספרי|מצאי|חברי|כתבי|האזיני|שימי|חפשי|תראי|הקליטי|מוכנה|יודעת|מתחילות|יוצאות|מכירות|מתרגלות|זוכרות|תצליחי|אלופה|שמעי|ותקני)(?=[\s.,!?:"–)]|$)/u;
+  it('has no feminine-only wording in any text or generated question', () => {
+    const bad = allHebrewTexts().filter((t) => FEMININE.test(t));
+    expect(bad).toEqual([]);
+  });
+  it('does not use slash forms like בחר/י', () => {
+    const bad = allHebrewTexts().filter((t) => /[א-ת]\/[א-ת]/u.test(t));
+    expect(bad).toEqual([]);
+  });
+  it('greets any name the same way, without guessing gender', () => {
+    for (const name of ['נועה', 'עידו', 'Alex', 'טל']) {
+      expect(T.welcome.hi(name)).toBe(`היי ${name}!`);
+      expect(T.home.hi(name)).toContain(name);
+    }
+    expect(T.welcome.ready).toBe('מוכנים ללמוד אנגלית?');
+  });
+  it('keeps the spoken English standard (no Hebrew or gender changes in audio texts)', () => {
+    for (const c of buildTtsClips()) expect(c.text).toMatch(/^[A-Za-z0-9 .,!?'-]+$/);
+    expect(buildTtsClips().find((c) => c.id === 'fb-hello')!.text).toBe("Hi! Let's learn English!");
+  });
+});
+
+describe('branding', () => {
+  it("is always Noa's English World with the agreed tagline", () => {
+    expect(BRAND.name).toBe("Noa's English World");
+    expect(BRAND.tagline).toBe('עולם האנגלית של נועה, לומדים ונהנים ביחד!');
+    const manifest = JSON.parse(fs.readFileSync(path.join(PUB, 'manifest.webmanifest'), 'utf8'));
+    expect(manifest.name).toBe("Noa's English World");
+    expect(manifest.display).toBe('standalone');
+    for (const i of manifest.icons) expect(fs.existsSync(path.join(PUB, i.src)), i.src).toBe(true);
+    const html = fs.readFileSync(path.resolve(PUB, '..', 'index.html'), 'utf8');
+    expect(html).toContain("<title>Noa's English World</title>");
+  });
+  it('share message has the agreed text', () => {
+    expect(T.share.message).toBe("מוזמנים ללמוד אנגלית עם נועה! 🌸\nהיכנסו ל-Noa's English World, משחקים, מקשיבים ולומדים אנגלית ביחד!");
   });
 });

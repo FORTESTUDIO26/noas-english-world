@@ -27,3 +27,11 @@ scripts/.tmp/
 scripts/.verify/
 scripts/.trial/
 scripts/.audio-backup/
+
+# local env / deploy tooling
+.env
+.env.*
+!.env.example
+.vercel
+scripts/verify.log
+scripts/make-audio.log

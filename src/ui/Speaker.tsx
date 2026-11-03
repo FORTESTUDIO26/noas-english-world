@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { T } from '../text/he.ts';
 import { audio, type PlayResult } from '../audio/player.ts';
 import { IconSpeaker, IconTurtle } from './icons.tsx';
 
@@ -27,18 +28,18 @@ export function Speaker({ clips, label, size = 'm', withSlow = false, className 
   const run = async (slow: boolean) => {
     setMsg(null);
     const r = await playClips(clips, slow);
-    if (r === 'missing') setMsg('הצליל עוד לא זמין');
-    if (r === 'blocked') setMsg('לחצי שוב כדי לשמוע');
+    if (r === 'missing') setMsg(T.audio.missing);
+    if (r === 'blocked') setMsg(T.audio.blocked);
   };
   return (
     <span className={`speaker-wrap ${className}`}>
-      <button type="button" className={`speaker speaker--${size} ${playing ? 'is-playing' : ''}`} onClick={() => void run(false)} aria-label={label ?? 'השמעה'}>
+      <button type="button" className={`speaker speaker--${size} ${playing ? 'is-playing' : ''}`} onClick={() => void run(false)} aria-label={label ?? T.common.play}>
         <IconSpeaker size={size === 'l' ? 34 : size === 'm' ? 26 : 20} />
         {label && <span className="speaker__label">{label}</span>}
         {children}
       </button>
       {withSlow && (
-        <button type="button" className="speaker speaker--slow" onClick={() => void run(true)} aria-label="השמעה איטית">
+        <button type="button" className="speaker speaker--slow" onClick={() => void run(true)} aria-label={T.common.playSlow}>
           <IconTurtle size={size === 's' ? 20 : 26} />
         </button>
       )}

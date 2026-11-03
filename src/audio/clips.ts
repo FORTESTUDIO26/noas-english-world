@@ -43,10 +43,10 @@ export type PromptId = keyof typeof PROMPTS;
 export const FEEDBACK = {
   great: 'Great job!',
   wellDone: 'Well done!',
-  excellent: 'Excellent, Noa!',
+  excellent: 'Excellent!',
   tryAgain: 'Try again.',
   listenAgain: "Let's listen again.",
-  hello: "Hi Noa! Let's learn English!",
+  hello: "Hi! Let's learn English!",
 } as const;
 export type FeedbackId = keyof typeof FEEDBACK;
 

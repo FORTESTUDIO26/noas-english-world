@@ -9,6 +9,8 @@ import { skillLabel, recommend } from '../learn/labels.ts';
 import { AREA_HE } from '../learn/questions.ts';
 import { useStore } from '../state/store.tsx';
 import { useNav } from '../state/nav.tsx';
+import { useProfile } from '../state/profileCtx.tsx';
+import { T } from '../text/he.ts';
 import { Screen } from '../ui/Screen.tsx';
 import { GameRunner } from './GameRunner.tsx';
 import { audio } from '../audio/player.ts';
@@ -18,7 +20,7 @@ import ttsAudit from '../audio/tts-audit.json';
 import phonemeAudit from '../audio/phoneme-audit.json';
 import { IconMic, IconSpeaker } from '../ui/icons.tsx';
 
-const M_HE: Record<Mastery, string> = { known: 'יודעת', learning: 'בתהליך', weak: 'צריך חיזוק', new: 'עוד לא תורגל' };
+const M_HE: Record<Mastery, string> = T.parents.m;
 
 function Cell({ label, m, en = true }: { label: string; m: Mastery; en?: boolean }) {
   return (
@@ -36,15 +38,17 @@ function countBy(save: ReturnType<typeof useStore>['save'], kind: SkillKind, ite
 
 export function ParentsScreen() {
   const { save, reset } = useStore();
+  const { profile, all, removeProfile, switchProfile } = useProfile();
   const nav = useNav();
+  const P = T.parents;
   const [quick, setQuick] = useState(false);
   const weak = useMemo(() => weakestSkills(save, 8), [save]);
   const quickQs = useMemo(() => (quick ? buildReview(save, 10) : []), [quick]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (quick) {
     return (
-      <Screen title="תרגול מהיר" tone="purple">
-        <GameRunner questions={quickQs} title="תרגול מהיר" onExit={() => setQuick(false)} onFinish={() => setQuick(false)} finishLabel="חזרה לאזור ההורים" />
+      <Screen title={P.quickTitle} tone="purple">
+        <GameRunner questions={quickQs} title={P.quickTitle} onExit={() => setQuick(false)} onFinish={() => setQuick(false)} finishLabel={P.backToParents} />
       </Screen>
     );
   }
@@ -59,28 +63,29 @@ export function ParentsScreen() {
   const hardSounds = LETTERS.filter((l) => masteryOf(save, 'letterSound', l.id) === 'weak');
 
   return (
-    <Screen title="אזור הורים" tone="blue" noSlow>
+    <Screen title={P.title} tone="blue" noSlow>
       <div className="parents">
-        <p className="lead">כאן רואים מה נועה באמת יודעת: רק תשובות נכונות בניסיון הראשון נחשבות. "יודעת" = 3 תשובות נכונות ברצף. סה״כ {totalAnswers} תשובות.</p>
+        <p className="p-profile">{P.profileOf(profile.name)}</p>
+        <p className="lead">{P.lead(totalAnswers)}</p>
 
         <section className="p-card p-card--rec">
-          <h2>המלצה לתרגול הבא</h2>
-          <p>{totalAnswers ? recommend(weak) : 'עוד אין מספיק תשובות. כדאי להתחיל במפגש 1 במסלול.'}</p>
+          <h2>{P.recTitle}</h2>
+          <p>{totalAnswers ? recommend(weak) : P.recEmpty}</p>
           {weak.length > 0 && <ul className="chips">{weak.map((k) => <li key={k}>{skillLabel(k)}</li>)}</ul>}
-          <button type="button" className="btn btn--primary" onClick={() => setQuick(true)}>תרגול מהיר – 10 שאלות על מה שהכי קשה</button>
+          <button type="button" className="btn btn--primary" onClick={() => setQuick(true)}>{P.quick}</button>
         </section>
 
         <section className="p-card">
-          <h2>מסלול הלמידה</h2>
+          <h2>{P.pathTitle}</h2>
           <ul className="p-path">
             {SESSIONS.map((s) => {
               const r = save.sessions[s.id];
               const k = sessionKnown(save, s);
               return (
                 <li key={s.id}>
-                  <b>מפגש {s.n}: {s.title}</b>
-                  <span>{r?.done ? `הושלם (${r.runs} פעמים), אחרון: ${r.lastCorrect}/${r.lastTotal} נכון` : 'עוד לא הושלם'}</span>
-                  {k && <span>שליטה: {k.known}/{k.total}</span>}
+                  <b>{T.path.meetingTitle(s.n, s.title)}</b>
+                  <span>{r?.done ? P.done(r.runs, r.lastCorrect, r.lastTotal) : P.notDone}</span>
+                  {k && <span>{P.mastery(k.known, k.total)}</span>}
                 </li>
               );
             })}
@@ -88,29 +93,29 @@ export function ParentsScreen() {
         </section>
 
         <section className="p-card">
-          <h2>אותיות – שמות <small>{names.known}/16 יודעת</small></h2>
+          <h2>{P.letterNames} <small>{P.known(names.known, 16)}</small></h2>
           <div className="mgrid">{LETTERS.map((l) => <Cell key={l.id} label={l.upper + l.lower} m={masteryOf(save, 'letterName', l.id)} />)}</div>
-          <h2>אותיות – צלילים <small>{sounds.known}/16 יודעת</small></h2>
+          <h2>{P.letterSounds} <small>{P.known(sounds.known, 16)}</small></h2>
           <div className="mgrid">{LETTERS.map((l) => <Cell key={l.id} label={`/${l.ipa}/ ${l.upper}`} m={masteryOf(save, 'letterSound', l.id)} />)}</div>
-          {hardSounds.length > 0 && <p className="warn">צלילים שעדיין קשים: <b dir="ltr">{hardSounds.map((l) => l.upper).join(', ')}</b></p>}
-          <h2>אות גדולה/קטנה וכתיבה</h2>
+          {hardSounds.length > 0 && <p className="warn">{P.hardSounds} <b dir="ltr">{hardSounds.map((l) => l.upper).join(', ')}</b></p>}
+          <h2>{P.caseWrite}</h2>
           <div className="mgrid">{LETTERS.map((l) => <Cell key={l.id} label={l.upper + l.lower} m={worse(masteryOf(save, 'letterCase', l.id), masteryOf(save, 'letterWrite', l.id))} />)}</div>
         </section>
 
         <section className="p-card">
-          <h2>מספרים בהאזנה <small>{nums.known}/20 יודעת · {nums.weak} צריכים חיזוק</small></h2>
+          <h2>{P.numbers} <small>{P.known(nums.known, 20)} · {P.needWork(nums.weak)}</small></h2>
           <div className="mgrid mgrid--num">{NUMBERS.map((n) => <Cell key={n.n} label={String(n.n)} m={masteryOf(save, 'number', n.n)} />)}</div>
-          <h2>צבעים בהאזנה <small>{cols.known}/10 יודעת</small></h2>
+          <h2>{P.colors} <small>{P.known(cols.known, 10)}</small></h2>
           <div className="mgrid">{COLORS.map((c) => <Cell key={c.id} label={c.id} m={masteryOf(save, 'color', c.id)} />)}</div>
-          <h2>קריאת המילים <small>{words.known}/7 יודעת</small></h2>
+          <h2>{P.words} <small>{P.known(words.known, 7)}</small></h2>
           <div className="mgrid">{WORDS.map((w) => <Cell key={w.id} label={w.id} m={masteryOf(save, 'word', w.id)} />)}</div>
         </section>
 
         <section className="p-card">
-          <h2>מבחנים לדוגמה</h2>
-          {save.exams.length === 0 ? <p>עוד לא נעשה מבחן.</p> : (
+          <h2>{P.exams}</h2>
+          {save.exams.length === 0 ? <p>{P.noExams}</p> : (
             <table className="area-table">
-              <thead><tr><th>תאריך</th><th>ציון</th><th>לפי תחום</th></tr></thead>
+              <thead><tr><th>{P.date}</th><th>{P.score}</th><th>{P.byArea}</th></tr></thead>
               <tbody>
                 {save.exams.slice().reverse().map((e) => (
                   <tr key={e.at}>
@@ -125,15 +130,33 @@ export function ParentsScreen() {
         </section>
 
         <section className="p-card">
-          <h2>שמע</h2>
-          <p>בדיקת הצלילים הפונטיים, הקלטה עצמית של צליל, ודוח הבדיקה האוטומטית של קובצי השמע.</p>
-          <button type="button" className="btn btn--ghost" onClick={() => nav.go({ name: 'soundcheck' })}>בדיקת צלילים והקלטות</button>
+          <h2>{P.profilesTitle}</h2>
+          <p>{P.profilesLead}</p>
+          <ul className="p-profiles">
+            {all.map((p) => (
+              <li key={p.id}>
+                <span className="profile-chip__avatar" aria-hidden>{p.name.charAt(0)}</span>
+                <b>{p.name}</b>
+                {p.id === profile.id && <small>({T.profiles.current(p.name)})</small>}
+                <button type="button" className="btn btn--small btn--ghost" onClick={() => {
+                  if (confirm(P.confirmDelete(p.name))) removeProfile(p.id);
+                }}>{P.deleteProfile}</button>
+              </li>
+            ))}
+          </ul>
+          <button type="button" className="btn btn--ghost" onClick={switchProfile}>{T.profiles.switch}</button>
+        </section>
+
+        <section className="p-card">
+          <h2>{P.audioTitle}</h2>
+          <p>{P.audioLead}</p>
+          <button type="button" className="btn btn--ghost" onClick={() => nav.go({ name: 'soundcheck' })}>{P.audioBtn}</button>
         </section>
 
         <section className="p-card p-card--danger">
-          <h2>איפוס</h2>
-          <p>ההתקדמות נשמרת רק במכשיר הזה. איפוס מוחק את כל התשובות והמבחנים.</p>
-          <button type="button" className="btn btn--danger" onClick={() => { if (confirm('למחוק את כל ההתקדמות של נועה במכשיר הזה?')) reset(); }}>איפוס התקדמות</button>
+          <h2>{P.resetTitle}</h2>
+          <p>{P.resetLead}</p>
+          <button type="button" className="btn btn--danger" onClick={() => { if (confirm(P.confirmReset(profile.name))) reset(); }}>{P.resetBtn}</button>
         </section>
       </div>
     </Screen>
@@ -183,59 +206,53 @@ export function SoundCheckScreen() {
       rec.start();
       setTimeout(() => rec.state === 'recording' && rec.stop(), 2000);
     } catch {
-      setErr('אין גישה למיקרופון. צריך לאשר גישה למיקרופון בדפדפן.');
+      setErr(T.sound.micDenied);
       setRecording(null);
     }
   };
 
   const unconfirmed = ttsAudit.unconfirmed;
   return (
-    <Screen title="בדיקת צלילים" tone="blue" noSlow>
+    <Screen title={T.sound.title} tone="blue" noSlow>
       <div className="parents">
         <section className="p-card">
-          <h2>הצלילים הפונטיים</h2>
-          <p>
-            כל צליל נחתך אוטומטית ממילה אמיתית שהוקלטה (למשל /b/ מתוך bat), בלי "אה" אחרי העיצור. בדיקה ממוחשבת עברה, אבל <b>אוזן אנושית צריכה לאשר</b>.
-            הקשיבי לכל צליל: אם הוא נשמע נכון – "נשמע נכון". אם לא – אפשר להקליט את הצליל בקולך (2 שניות), וההקלטה תחליף את הקובץ במכשיר הזה.
-          </p>
+          <h2>{T.sound.phonTitle}</h2>
+          <p>{T.sound.phonLead}</p>
           {err && <p className="warn">{err}</p>}
           <table className="sound-table">
-            <thead><tr><th>אות</th><th>צליל</th><th>מקור</th><th>שמיעה</th><th>אישור</th><th>הקלטה</th></tr></thead>
+            <thead><tr>{T.sound.cols.map((c) => <th key={c}>{c}</th>)}</tr></thead>
             <tbody>
               {phonemeAudit.map((p) => {
                 const hasRec = recs.includes(clipId.phoneme(p.id));
                 const l = LETTERS.find((x) => x.id === p.id);
                 return (
                   <tr key={p.id} className={review[p.id] === 'ok' ? 'is-ok' : review[p.id] === 'bad' ? 'is-bad' : ''}>
-                    <td dir="ltr"><b>{l ? l.upper + l.lower : p.id}</b>{!l && <small> (למילים)</small>}</td>
+                    <td dir="ltr"><b>{l ? l.upper + l.lower : p.id}</b>{!l && <small>{T.sound.forWords}</small>}</td>
                     <td dir="ltr">/{p.ipa}/</td>
-                    <td><small>{hasRec ? 'הקלטה שלך' : <>מתוך <span dir="ltr" lang="en">{p.carrier}</span></>}</small></td>
+                    <td><small>{hasRec ? T.sound.yourRec : <>{T.sound.from} <span dir="ltr" lang="en">{p.carrier}</span></>}</small></td>
                     <td>
-                      <button type="button" className="btn btn--icon" onClick={() => void audio.play(clipId.phoneme(p.id))} aria-label="השמעה"><IconSpeaker /></button>
-                      {l && <button type="button" className="btn btn--icon btn--small" onClick={() => void audio.play(clipId.word(l.example))} aria-label="מילה לדוגמה"><span dir="ltr" lang="en">{l.example}</span></button>}
+                      <button type="button" className="btn btn--icon" onClick={() => void audio.play(clipId.phoneme(p.id))} aria-label={T.common.play}><IconSpeaker /></button>
+                      {l && <button type="button" className="btn btn--icon btn--small" onClick={() => void audio.play(clipId.word(l.example))} aria-label={T.sound.exampleWord}><span dir="ltr" lang="en">{l.example}</span></button>}
                     </td>
                     <td className="nowrap">
-                      <button type="button" className={`btn btn--small ${review[p.id] === 'ok' ? 'btn--primary' : 'btn--ghost'}`} onClick={() => setReview({ ...review, [p.id]: 'ok' })}>נשמע נכון</button>
-                      <button type="button" className={`btn btn--small ${review[p.id] === 'bad' ? 'btn--danger' : 'btn--ghost'}`} onClick={() => setReview({ ...review, [p.id]: 'bad' })}>לא</button>
+                      <button type="button" className={`btn btn--small ${review[p.id] === 'ok' ? 'btn--primary' : 'btn--ghost'}`} onClick={() => setReview({ ...review, [p.id]: 'ok' })}>{T.sound.ok}</button>
+                      <button type="button" className={`btn btn--small ${review[p.id] === 'bad' ? 'btn--danger' : 'btn--ghost'}`} onClick={() => setReview({ ...review, [p.id]: 'bad' })}>{T.sound.bad}</button>
                     </td>
                     <td className="nowrap">
-                      <button type="button" className={`btn btn--small btn--ghost ${recording === p.id ? 'is-rec' : ''}`} disabled={!!recording} onClick={() => void record(p.id)}><IconMic /> {recording === p.id ? 'מקליטה…' : 'הקלטה'}</button>
-                      {hasRec && <button type="button" className="btn btn--small btn--ghost" onClick={async () => { await deleteRecording(clipId.phoneme(p.id)); setRecs(await listRecordingIds()); }}>מחיקה</button>}
+                      <button type="button" className={`btn btn--small btn--ghost ${recording === p.id ? 'is-rec' : ''}`} disabled={!!recording} onClick={() => void record(p.id)}><IconMic /> {recording === p.id ? T.sound.recording : T.sound.record}</button>
+                      {hasRec && <button type="button" className="btn btn--small btn--ghost" onClick={async () => { await deleteRecording(clipId.phoneme(p.id)); setRecs(await listRecordingIds()); }}>{T.sound.del}</button>}
                     </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
-          <p className="small">אושרו: {Object.values(review).filter((x) => x === 'ok').length}/{phonemeAudit.length}</p>
+          <p className="small">{T.sound.approved(Object.values(review).filter((x) => x === 'ok').length, phonemeAudit.length)}</p>
         </section>
 
         <section className="p-card">
-          <h2>בדיקה אוטומטית של קובצי הדיבור</h2>
-          <p>
-            {ttsAudit.total} קבצים (רגיל + איטי) נבדקו ב־{ttsAudit.checkedAt} בזיהוי דיבור אנגלי עצמאי. {ttsAudit.confirmed} זוהו בדיוק כמו שצריך.
-            את הקבצים הבאים מנוע הזיהוי לא הצליח לאשר (המנוע עצמו מתבלבל באותיות בודדות ובמילים קצרות, גם בקולות אחרים) – כדאי להקשיב להם:
-          </p>
+          <h2>{T.sound.autoTitle}</h2>
+          <p>{T.sound.autoLead(ttsAudit.total, ttsAudit.checkedAt, ttsAudit.confirmed)}</p>
           <ul className="chips">
             {unconfirmed.map((u) => (
               <li key={u.id + u.slow}>
