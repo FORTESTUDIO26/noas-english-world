@@ -1,0 +1,104 @@
+[
+ {
+  "id": "a",
+  "ipa": "æ",
+  "carrier": "at",
+  "autoOk": true
+ },
+ {
+  "id": "b",
+  "ipa": "b",
+  "carrier": "bat",
+  "autoOk": true
+ },
+ {
+  "id": "c",
+  "ipa": "k",
+  "carrier": "cap",
+  "autoOk": true
+ },
+ {
+  "id": "d",
+  "ipa": "d",
+  "carrier": "dad",
+  "autoOk": true
+ },
+ {
+  "id": "e",
+  "ipa": "ɛ",
+  "carrier": "etch",
+  "autoOk": true
+ },
+ {
+  "id": "f",
+  "ipa": "f",
+  "carrier": "off",
+  "autoOk": true
+ },
+ {
+  "id": "g",
+  "ipa": "g",
+  "carrier": "gap",
+  "autoOk": true
+ },
+ {
+  "id": "h",
+  "ipa": "h",
+  "carrier": "hat",
+  "autoOk": true
+ },
+ {
+  "id": "i",
+  "ipa": "ɪ",
+  "carrier": "it",
+  "autoOk": true
+ },
+ {
+  "id": "j",
+  "ipa": "dʒ",
+  "carrier": "jet",
+  "autoOk": true
+ },
+ {
+  "id": "k",
+  "ipa": "k",
+  "carrier": "cap",
+  "autoOk": true
+ },
+ {
+  "id": "l",
+  "ipa": "l",
+  "carrier": "lap",
+  "autoOk": true
+ },
+ {
+  "id": "m",
+  "ipa": "m",
+  "carrier": "am",
+  "autoOk": true
+ },
+ {
+  "id": "n",
+  "ipa": "n",
+  "carrier": "an",
+  "autoOk": true
+ },
+ {
+  "id": "o",
+  "ipa": "ɑ",
+  "carrier": "ox",
+  "autoOk": true
+ },
+ {
+  "id": "p",
+  "ipa": "p",
+  "carrier": "pat",
+  "autoOk": true
+ },
+ {
+  "id": "t",
+  "ipa": "t",
+  "carrier": "tap",
+  "autoOk": true
+ }
+]

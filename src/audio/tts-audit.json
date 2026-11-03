@@ -1,0 +1,97 @@
+{
+ "checkedAt": "2026-11-03",
+ "total": 502,
+ "confirmed": 484,
+ "unconfirmed": [
+  {
+   "id": "letter-a",
+   "slow": false,
+   "heard": "H"
+  },
+  {
+   "id": "letter-a",
+   "slow": true,
+   "heard": "K"
+  },
+  {
+   "id": "letter-e",
+   "slow": false,
+   "heard": "B"
+  },
+  {
+   "id": "letter-e",
+   "slow": true,
+   "heard": "B"
+  },
+  {
+   "id": "letter-g",
+   "slow": false,
+   "heard": "T"
+  },
+  {
+   "id": "letter-g",
+   "slow": true,
+   "heard": "T"
+  },
+  {
+   "id": "letter-o",
+   "slow": false,
+   "heard": "L"
+  },
+  {
+   "id": "letter-o",
+   "slow": true,
+   "heard": "L"
+  },
+  {
+   "id": "find-letter-o",
+   "slow": false,
+   "heard": "Find the letter L"
+  },
+  {
+   "id": "word-bag",
+   "slow": false,
+   "heard": "Bad"
+  },
+  {
+   "id": "word-bag",
+   "slow": true,
+   "heard": "Bad"
+  },
+  {
+   "id": "word-egg",
+   "slow": false,
+   "heard": "Bag"
+  },
+  {
+   "id": "word-egg",
+   "slow": true,
+   "heard": "Bag"
+  },
+  {
+   "id": "word-moon",
+   "slow": false,
+   "heard": "Lemon"
+  },
+  {
+   "id": "word-pig",
+   "slow": false,
+   "heard": ""
+  },
+  {
+   "id": "prompt-countHowMany",
+   "slow": true,
+   "heard": ""
+  },
+  {
+   "id": "prompt-readWord",
+   "slow": true,
+   "heard": ""
+  },
+  {
+   "id": "fb-hello",
+   "slow": true,
+   "heard": ""
+  }
+ ]
+}

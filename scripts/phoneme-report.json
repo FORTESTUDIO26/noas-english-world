@@ -1,0 +1,278 @@
+[
+ {
+  "id": "a",
+  "ipa": "æ",
+  "carrier": {
+   "word": "at",
+   "part": "vowel"
+  },
+  "durMs": 215,
+  "note": "vowel 215ms",
+  "checks": {
+   "durationOk": true,
+   "noVowelAfterVoiceless": true,
+   "shortVowelTailForStops": true
+  },
+  "autoOk": true
+ },
+ {
+  "id": "b",
+  "ipa": "b",
+  "carrier": {
+   "word": "bat",
+   "part": "onset"
+  },
+  "durMs": 55,
+  "note": "release+35ms (prevoice 10ms)",
+  "checks": {
+   "durationOk": true,
+   "noVowelAfterVoiceless": true,
+   "shortVowelTailForStops": true
+  },
+  "autoOk": true
+ },
+ {
+  "id": "c",
+  "ipa": "k",
+  "carrier": {
+   "word": "cap",
+   "part": "onset"
+  },
+  "durMs": 65,
+  "note": "voiceless 70ms",
+  "checks": {
+   "durationOk": true,
+   "noVowelAfterVoiceless": true,
+   "shortVowelTailForStops": true
+  },
+  "autoOk": true
+ },
+ {
+  "id": "d",
+  "ipa": "d",
+  "carrier": {
+   "word": "dad",
+   "part": "onset"
+  },
+  "durMs": 45,
+  "note": "release+35ms (prevoice 0ms)",
+  "checks": {
+   "durationOk": true,
+   "noVowelAfterVoiceless": true,
+   "shortVowelTailForStops": true
+  },
+  "autoOk": true
+ },
+ {
+  "id": "e",
+  "ipa": "ɛ",
+  "carrier": {
+   "word": "etch",
+   "part": "vowel"
+  },
+  "durMs": 165,
+  "note": "vowel 165ms",
+  "checks": {
+   "durationOk": true,
+   "noVowelAfterVoiceless": true,
+   "shortVowelTailForStops": true
+  },
+  "autoOk": true
+ },
+ {
+  "id": "f",
+  "ipa": "f",
+  "carrier": {
+   "word": "off",
+   "part": "coda"
+  },
+  "durMs": 185,
+  "heldMs": 322,
+  "note": "fricative 175ms",
+  "checks": {
+   "durationOk": true,
+   "noVowelAfterVoiceless": true,
+   "shortVowelTailForStops": true
+  },
+  "autoOk": true
+ },
+ {
+  "id": "g",
+  "ipa": "g",
+  "carrier": {
+   "word": "gap",
+   "part": "onset"
+  },
+  "durMs": 65,
+  "note": "release+35ms (prevoice 20ms)",
+  "checks": {
+   "durationOk": true,
+   "noVowelAfterVoiceless": true,
+   "shortVowelTailForStops": true
+  },
+  "autoOk": true
+ },
+ {
+  "id": "h",
+  "ipa": "h",
+  "carrier": {
+   "word": "hat",
+   "part": "onset"
+  },
+  "durMs": 60,
+  "note": "voiceless 65ms",
+  "checks": {
+   "durationOk": true,
+   "noVowelAfterVoiceless": true,
+   "shortVowelTailForStops": true
+  },
+  "autoOk": true
+ },
+ {
+  "id": "i",
+  "ipa": "ɪ",
+  "carrier": {
+   "word": "it",
+   "part": "vowel"
+  },
+  "durMs": 120,
+  "note": "vowel 120ms",
+  "checks": {
+   "durationOk": true,
+   "noVowelAfterVoiceless": true,
+   "shortVowelTailForStops": true
+  },
+  "autoOk": true
+ },
+ {
+  "id": "j",
+  "ipa": "dʒ",
+  "carrier": {
+   "word": "jet",
+   "part": "onset"
+  },
+  "durMs": 90,
+  "note": "affricate 70ms",
+  "checks": {
+   "durationOk": true,
+   "noVowelAfterVoiceless": true,
+   "shortVowelTailForStops": true
+  },
+  "autoOk": true
+ },
+ {
+  "id": "k",
+  "ipa": "k",
+  "carrier": {
+   "word": "cap",
+   "part": "onset"
+  },
+  "durMs": 65,
+  "note": "voiceless 70ms",
+  "checks": {
+   "durationOk": true,
+   "noVowelAfterVoiceless": true,
+   "shortVowelTailForStops": true
+  },
+  "autoOk": true
+ },
+ {
+  "id": "l",
+  "ipa": "l",
+  "carrier": {
+   "word": "lap",
+   "part": "onset"
+  },
+  "durMs": 85,
+  "heldMs": 322,
+  "note": "lateral 75ms",
+  "checks": {
+   "durationOk": true,
+   "noVowelAfterVoiceless": true,
+   "shortVowelTailForStops": true
+  },
+  "autoOk": true
+ },
+ {
+  "id": "m",
+  "ipa": "m",
+  "carrier": {
+   "word": "am",
+   "part": "coda"
+  },
+  "durMs": 165,
+  "heldMs": 327,
+  "note": "nasal 165ms",
+  "checks": {
+   "durationOk": true,
+   "noVowelAfterVoiceless": true,
+   "shortVowelTailForStops": true
+  },
+  "autoOk": true
+ },
+ {
+  "id": "n",
+  "ipa": "n",
+  "carrier": {
+   "word": "an",
+   "part": "coda"
+  },
+  "durMs": 185,
+  "heldMs": 322,
+  "note": "nasal 185ms",
+  "checks": {
+   "durationOk": true,
+   "noVowelAfterVoiceless": true,
+   "shortVowelTailForStops": true
+  },
+  "autoOk": true
+ },
+ {
+  "id": "o",
+  "ipa": "ɑ",
+  "carrier": {
+   "word": "ox",
+   "part": "vowel"
+  },
+  "durMs": 160,
+  "note": "vowel 160ms",
+  "checks": {
+   "durationOk": true,
+   "noVowelAfterVoiceless": true,
+   "shortVowelTailForStops": true
+  },
+  "autoOk": true
+ },
+ {
+  "id": "p",
+  "ipa": "p",
+  "carrier": {
+   "word": "pat",
+   "part": "onset"
+  },
+  "durMs": 70,
+  "note": "voiceless 75ms",
+  "checks": {
+   "durationOk": true,
+   "noVowelAfterVoiceless": true,
+   "shortVowelTailForStops": true
+  },
+  "autoOk": true
+ },
+ {
+  "id": "t",
+  "ipa": "t",
+  "carrier": {
+   "word": "tap",
+   "part": "onset"
+  },
+  "durMs": 65,
+  "note": "voiceless 70ms",
+  "checks": {
+   "durationOk": true,
+   "noVowelAfterVoiceless": true,
+   "shortVowelTailForStops": true
+  },
+  "autoOk": true
+ }
+]

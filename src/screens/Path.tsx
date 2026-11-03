@@ -1,0 +1,170 @@
+import { useMemo, useRef, useState } from 'react';
+import { SESSIONS, buildStep, sessionById, sessionKnown, type Step } from '../learn/path.ts';
+import { letter, type LetterId } from '../content/letters.ts';
+import { Screen } from '../ui/Screen.tsx';
+import { useNav } from '../state/nav.tsx';
+import { useStore } from '../state/store.tsx';
+import { GameRunner, RunSummary, type RunResult } from './GameRunner.tsx';
+import { LetterLesson } from './Letters.tsx';
+import { NumbersLearn, ColorsLearn, WordsLearn } from './Worlds.tsx';
+import { ExamFlow } from './Exam.tsx';
+import { Guide } from '../art/Guide.tsx';
+import { IconCheck } from '../ui/icons.tsx';
+import type { SkillResult } from '../ui/QuestionView.tsx';
+
+export function PathScreen() {
+  const nav = useNav();
+  const { save } = useStore();
+  const nextIdx = SESSIONS.findIndex((s) => !save.sessions[s.id]?.done);
+  return (
+    <Screen title="המסלול שלי" tone="purple">
+      <p className="lead">שישה מפגשים קצרים. אפשר להתקדם בקצב שלך ולחזור על מפגש כמה פעמים שרוצים.</p>
+      <ol className="path">
+        {SESSIONS.map((s, i) => {
+          const rec = save.sessions[s.id];
+          const k = sessionKnown(save, s);
+          const isNext = i === nextIdx;
+          return (
+            <li key={s.id} className={`path__item ${rec?.done ? 'is-done' : ''} ${isNext ? 'is-next' : ''}`}>
+              <button type="button" className="path__btn" onClick={() => nav.go({ name: 'session', id: s.id })}>
+                <span className="path__n">{rec?.done ? <IconCheck size={26} /> : s.n}</span>
+                <span className="path__text">
+                  <b>מפגש {s.n}: {s.title}</b>
+                  <small>{s.goal} · כ־{s.minutes} דקות</small>
+                  {k && (
+                    <span className="path__known">
+                      <span className="meter"><span style={{ width: `${(k.known / k.total) * 100}%` }} /></span>
+                      שליטה: {k.known} מתוך {k.total} מיומנויות
+                    </span>
+                  )}
+                  {rec?.done && <small className="path__last">בפעם האחרונה: {rec.lastCorrect}/{rec.lastTotal} נכונות בניסיון ראשון</small>}
+                </span>
+                {isNext && <span className="path__badge">הבא בתור</span>}
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+    </Screen>
+  );
+}
+
+export function SessionScreen({ id }: { id: string }) {
+  const s = sessionById(id)!;
+  const nav = useNav();
+  const { save, finishSession } = useStore();
+  const [stepIdx, setStepIdx] = useState(-1);
+  const all = useRef<SkillResult[]>([]);
+  const [final, setFinal] = useState<RunResult | null>(null);
+  const [examScore, setExamScore] = useState<string | null>(null);
+
+  const nextStep = () => {
+    if (stepIdx + 1 < s.steps.length) { setStepIdx(stepIdx + 1); return; }
+    const rs = all.current;
+    const r: RunResult = { correct: rs.filter((x) => x.correct).length, total: rs.length, wrong: [...new Set(rs.filter((x) => !x.correct).map((x) => x.skill))], results: rs };
+    finishSession(s.id, r.correct, r.total);
+    setFinal(r);
+  };
+
+  if (final) {
+    const learned = s.steps.filter((st) => st.kind !== 'game' && st.kind !== 'review' && st.kind !== 'lab').map((st) => st.title);
+    const next = SESSIONS[s.n];
+    return (
+      <Screen title={`מפגש ${s.n}`} tone="purple" noSlow>
+        <RunSummary title={`מפגש ${s.n}`} r={final} onDone={() => nav.go({ name: 'path' })} doneLabel="חזרה למסלול"
+          extra={
+            <div className="summary__more">
+              {learned.length > 0 && <p><b>מה למדנו:</b> {learned.join(' · ')}</p>}
+              {examScore && <p><b>מבחן לדוגמה:</b> {examScore}</p>}
+              {next && <p><b>במפגש הבא:</b> {next.title} – {next.goal}</p>}
+            </div>
+          } />
+      </Screen>
+    );
+  }
+
+  if (stepIdx < 0) {
+    return (
+      <Screen title={`מפגש ${s.n}`} tone="purple">
+        <div className="intro">
+          <Guide size={130} mood="happy" />
+          <h2>{s.title}</h2>
+          <p>{s.goal}</p>
+          <ol className="intro__steps">
+            {s.steps.map((st, i) => <li key={i}>{st.title}</li>)}
+          </ol>
+          <button type="button" className="btn btn--primary btn--wide" onClick={() => setStepIdx(0)}>יוצאות לדרך!</button>
+        </div>
+      </Screen>
+    );
+  }
+
+  const step = s.steps[stepIdx];
+  return (
+    <Screen title={`מפגש ${s.n} · ${stepIdx + 1}/${s.steps.length}`} tone="purple">
+      <StepView key={stepIdx} step={step} save={save}
+        onResults={(r) => all.current.push(...r)}
+        onExam={(txt) => setExamScore(txt)}
+        onDone={nextStep} />
+    </Screen>
+  );
+}
+
+function StepView({ step, save, onResults, onDone, onExam }: {
+  step: Step;
+  save: ReturnType<typeof useStore>['save'];
+  onResults: (r: SkillResult[]) => void;
+  onDone: () => void;
+  onExam: (t: string) => void;
+}) {
+  const nav = useNav();
+  // Questions are built once when the step opens (adaptive to current progress).
+  const questions = useMemo(() => buildStep(step, save), [step]); // eslint-disable-line react-hooks/exhaustive-deps
+  switch (step.kind) {
+    case 'learnLetters':
+      return <LearnLetters letters={step.letters} title={step.title} onDone={onDone} />;
+    case 'learnNumbers':
+      return <LearnBlock title={step.title} onDone={onDone}><NumbersLearn /></LearnBlock>;
+    case 'learnColors':
+      return <LearnBlock title={step.title} onDone={onDone}><p className="lead">לחצי על כל צבע ושמעי את השם שלו.</p><ColorsLearn /></LearnBlock>;
+    case 'learnWords':
+      return <LearnBlock title={step.title} onDone={onDone}><WordsLearn /></LearnBlock>;
+    case 'exam':
+      return <ExamFlow onExit={() => nav.back()} onComplete={(r) => { onExam(`${r.score}%`); onResults(r.results); onDone(); }} />;
+    default:
+      return (
+        <GameRunner questions={questions} title={step.title} mode={step.kind === 'lab' ? 'lab-learn' : 'practice'} summary={false}
+          onExit={onDone}
+          onFinish={(r) => { onResults(r.results); onDone(); }} />
+      );
+  }
+}
+
+function LearnBlock({ title, onDone, children }: { title: string; onDone: () => void; children: React.ReactNode }) {
+  return (
+    <div className="learn-block">
+      <h2 className="step-title">{title}</h2>
+      {children}
+      <button type="button" className="btn btn--primary btn--wide" onClick={onDone}>המשך ←</button>
+    </div>
+  );
+}
+
+/** One letter at a time; "next" opens after hearing both the name and the sound. */
+function LearnLetters({ letters, title, onDone }: { letters: LetterId[]; title: string; onDone: () => void }) {
+  const [i, setI] = useState(0);
+  const [heard, setHeard] = useState<Set<string>>(new Set());
+  const id = letters[i];
+  const ready = heard.has(`${id}:name`) && heard.has(`${id}:sound`);
+  return (
+    <div className="learn-block">
+      <h2 className="step-title">{title} <span className="step-title__sub" dir="ltr">({i + 1}/{letters.length})</span></h2>
+      <LetterLesson key={id} id={id} onHeard={(w) => setHeard(new Set(heard).add(`${id}:${w}`))} />
+      {!ready && <p className="hint">הקשיבי ל"שם האות" ול"הצליל של האות" כדי להמשיך</p>}
+      <button type="button" className="btn btn--primary btn--wide" disabled={!ready}
+        onClick={() => (i + 1 < letters.length ? setI(i + 1) : onDone())}>
+        {i + 1 < letters.length ? `לאות הבאה: ${letter(letters[i + 1]).upper} ←` : 'המשך ←'}
+      </button>
+    </div>
+  );
+}
