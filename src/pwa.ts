@@ -58,6 +58,8 @@ export async function promptInstall(): Promise<boolean> {
 type UpdateState = 'none' | 'ready';
 let updateState: UpdateState = 'none';
 let waiting: ServiceWorker | null = null;
+/** true only after the user pressed "update" – the first install never reloads the page. */
+let userAskedUpdate = false;
 const updListeners = new Set<(s: UpdateState) => void>();
 
 export function onUpdate(fn: (s: UpdateState) => void) {
@@ -74,6 +76,7 @@ function setWaiting(w: ServiceWorker) {
 
 /** Switch to the new version (the user pressed "update"). */
 export function applyUpdate() {
+  userAskedUpdate = true;
   if (!waiting) { location.reload(); return; }
   waiting.postMessage('SKIP_WAITING');
 }
@@ -104,7 +107,7 @@ export function setupPwa() {
       });
       let reloading = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (reloading) return;
+        if (reloading || !userAskedUpdate) return;
         reloading = true;
         location.reload();
       });
