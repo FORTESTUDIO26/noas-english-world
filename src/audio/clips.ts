@@ -22,37 +22,24 @@ export interface TtsClip {
 /** Sounds used only inside word segmenting (t), not taught as letters. */
 export const EXTRA_PHONEMES = [{ id: 't', ipa: 't', carrier: { word: 'tap', part: 'onset' as const } }];
 
-export const PROMPTS = {
-  listenChoose: 'Listen and choose.',
-  whichSound: 'Which letter makes this sound?',
-  matchLetters: 'Match the big and small letters.',
-  missingLetter: 'Which letter is missing?',
-  firstLetter: 'Which letter does it start with?',
-  trace: 'Trace the letter.',
-  countHowMany: 'Count. How many?',
-  whichPicture: 'Which picture is it?',
-  readWord: 'Read the word. Find the picture.',
-  whichWord: 'Which word is it?',
-  matchNumbers: 'Match the number and the word.',
-  whichLetter: 'Which letter is it?',
-  whichColor: 'Which color is it?',
-  missingInWord: 'Which letter is missing?',
-} as const;
-export type PromptId = keyof typeof PROMPTS;
-
+/** English feedback is not used any more (feedback is spoken in Hebrew); only the greeting stays. */
 export const FEEDBACK = {
-  great: 'Great job!',
-  wellDone: 'Well done!',
-  excellent: 'Excellent!',
-  tryAgain: 'Try again.',
-  listenAgain: "Let's listen again.",
   hello: "Hi! Let's learn English!",
 } as const;
 export type FeedbackId = keyof typeof FEEDBACK;
 
+/** Changes whenever the recordings are regenerated, so old listening approvals don't carry over. */
+export const AUDIO_VERSION = '2026-11-04';
+
+/** Speaking rates (neural voice, recorded – never time-stretched). */
+export const RATES = {
+  en: { normal: '-15%', slow: '-35%' },
+  he: { normal: '-8%', slow: '-28%' },
+} as const;
+export const VOICES = { en: 'en-US-JennyNeural', he: 'he-IL-HilaNeural' } as const;
+
 export const clipId = {
   letterName: (l: LetterId) => `letter-${l}`,
-  findLetter: (l: LetterId) => `find-letter-${l}`,
   number: (n: number) => `num-${n}`,
   touchNumber: (n: number) => `touch-number-${n}`,
   findNumber: (n: number) => `find-number-${n}`,
@@ -61,7 +48,6 @@ export const clipId = {
   colorThing: (w: WordId, c: ColorId) => `paint-${w}-${c}`,
   thenColorThing: (w: WordId, c: ColorId) => `then-paint-${w}-${c}`,
   word: (w: string) => `word-${w}`,
-  prompt: (p: PromptId) => `prompt-${p}`,
   feedback: (f: FeedbackId) => `fb-${f}`,
   phoneme: (id: string) => `sound-${id}`,
 };
@@ -75,7 +61,6 @@ export function buildTtsClips(): TtsClip[] {
   for (const l of LETTERS) {
     // Spoken as a letter name (checked with speech recognition in scripts/verify-audio).
     out.push({ id: clipId.letterName(l.id), text: `${l.upper}.`, group: 'letter' });
-    out.push({ id: clipId.findLetter(l.id), text: `Find the letter ${l.upper}.`, group: 'instruction' });
   }
   for (const n of NUMBERS) {
     out.push({ id: clipId.number(n.n), text: `${cap(n.word)}.`, group: 'number' });
@@ -92,7 +77,6 @@ export function buildTtsClips(): TtsClip[] {
   }
   const words = new Set<string>([...WORDS.map((w) => w.id), ...LETTERS.map((l) => l.example)]);
   for (const w of words) out.push({ id: clipId.word(w), text: `${cap(w)}.`, group: 'word' });
-  for (const [k, text] of Object.entries(PROMPTS)) out.push({ id: clipId.prompt(k as PromptId), text, group: 'prompt' });
   for (const [k, text] of Object.entries(FEEDBACK)) out.push({ id: clipId.feedback(k as FeedbackId), text, group: 'feedback' });
   return out;
 }

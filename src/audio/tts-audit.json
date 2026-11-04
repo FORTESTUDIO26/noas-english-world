@@ -1,16 +1,11 @@
 {
- "checkedAt": "2026-11-03",
- "total": 502,
- "confirmed": 484,
+ "checkedAt": "2026-11-04",
+ "total": 432,
+ "confirmed": 418,
  "unconfirmed": [
   {
    "id": "letter-a",
    "slow": false,
-   "heard": "H"
-  },
-  {
-   "id": "letter-a",
-   "slow": true,
    "heard": "K"
   },
   {
@@ -44,11 +39,6 @@
    "heard": "L"
   },
   {
-   "id": "find-letter-o",
-   "slow": false,
-   "heard": "Find the letter L"
-  },
-  {
    "id": "word-bag",
    "slow": false,
    "heard": "Bad"
@@ -69,23 +59,13 @@
    "heard": "Bag"
   },
   {
-   "id": "word-moon",
-   "slow": false,
-   "heard": "Lemon"
-  },
-  {
-   "id": "word-pig",
+   "id": "word-goat",
    "slow": false,
    "heard": ""
   },
   {
-   "id": "prompt-countHowMany",
-   "slow": true,
-   "heard": ""
-  },
-  {
-   "id": "prompt-readWord",
-   "slow": true,
+   "id": "fb-hello",
+   "slow": false,
    "heard": ""
   },
   {

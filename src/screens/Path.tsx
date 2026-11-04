@@ -53,14 +53,16 @@ export function PathScreen() {
 export function SessionScreen({ id }: { id: string }) {
   const s = sessionById(id)!;
   const nav = useNav();
-  const { save, finishSession } = useStore();
+  const { save, finishSession, setResume } = useStore();
+  const resumeAt = save.resume?.[id];
   const [stepIdx, setStepIdx] = useState(-1);
   const all = useRef<SkillResult[]>([]);
   const [final, setFinal] = useState<RunResult | null>(null);
   const [examScore, setExamScore] = useState<string | null>(null);
 
   const nextStep = () => {
-    if (stepIdx + 1 < s.steps.length) { setStepIdx(stepIdx + 1); return; }
+    if (stepIdx + 1 < s.steps.length) { setStepIdx(stepIdx + 1); setResume(s.id, stepIdx + 1); return; }
+    setResume(s.id, null);
     const rs = all.current;
     const r: RunResult = { correct: rs.filter((x) => x.correct).length, total: rs.length, wrong: [...new Set(rs.filter((x) => !x.correct).map((x) => x.skill))], results: rs };
     finishSession(s.id, r.correct, r.total);
@@ -94,7 +96,14 @@ export function SessionScreen({ id }: { id: string }) {
           <ol className="intro__steps">
             {s.steps.map((st, i) => <li key={i}>{st.title}</li>)}
           </ol>
-          <button type="button" className="btn btn--primary btn--wide" onClick={() => setStepIdx(0)}>{T.path.go}</button>
+          {resumeAt !== undefined && resumeAt > 0 && resumeAt < s.steps.length ? (
+            <>
+              <button type="button" className="btn btn--primary btn--wide" onClick={() => setStepIdx(resumeAt)}>{T.path.resume(resumeAt + 1, s.steps[resumeAt].title)}</button>
+              <button type="button" className="link-btn link-btn--center" onClick={() => { setResume(s.id, 0); setStepIdx(0); }}>{T.path.restart}</button>
+            </>
+          ) : (
+            <button type="button" className="btn btn--primary btn--wide" onClick={() => { setResume(s.id, 0); setStepIdx(0); }}>{T.path.go}</button>
+          )}
         </div>
       </Screen>
     );
@@ -135,6 +144,7 @@ function StepView({ step, save, onResults, onDone, onExam }: {
     default:
       return (
         <GameRunner questions={questions} title={step.title} mode={step.kind === 'lab' ? 'lab-learn' : 'practice'} summary={false}
+          introKey={step.kind === 'game' ? step.game : step.kind === 'lab' ? 'lab' : 'review'}
           onExit={onDone}
           onFinish={(r) => { onResults(r.results); onDone(); }} />
       );
@@ -160,7 +170,7 @@ function LearnLetters({ letters, title, onDone }: { letters: LetterId[]; title: 
   return (
     <div className="learn-block">
       <h2 className="step-title">{title} <span className="step-title__sub" dir="ltr">({i + 1}/{letters.length})</span></h2>
-      <LetterLesson key={id} id={id} onHeard={(w) => setHeard(new Set(heard).add(`${id}:${w}`))} />
+      <LetterLesson key={id} id={id} onHeard={(w) => setHeard((h) => new Set(h).add(`${id}:${w}`))} />
       {!ready && <p className="hint">{T.path.needBoth}</p>}
       <button type="button" className="btn btn--primary btn--wide" disabled={!ready}
         onClick={() => (i + 1 < letters.length ? setI(i + 1) : onDone())}>

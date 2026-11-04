@@ -17,6 +17,10 @@ import { SESSIONS, buildReview, buildStep } from './learn/path.ts';
 import { PICTURE_IDS } from './art/pictures.tsx';
 import { addProfile, checkName, deleteProfile, loadProfiles, saveKey, selectProfile } from './state/profiles.ts';
 import { T, BRAND } from './text/he.ts';
+import { spokenHebrewSegments } from './learn/spoken.ts';
+import { heClipId, speechClips, parseMixed } from './audio/speech.ts';
+import heClips from './audio/he-clips.json';
+import { UPPER, LOWER, samplePath, checkWriting, isDot } from './content/handwriting.ts';
 
 const PUB = path.resolve(__dirname, '..', 'public');
 const exists = (p: string) => fs.existsSync(path.join(PUB, p)) && fs.statSync(path.join(PUB, p)).size > 500;
@@ -76,7 +80,7 @@ describe('2–4. audio files', () => {
     for (const l of LETTERS) {
       const bytes = fs.statSync(path.join(PUB, phonemePath(l.id))).size;
       const seconds = (bytes - 44) / 2 / 24000;
-      expect(seconds, l.id).toBeLessThan(0.6);
+      expect(seconds, l.id).toBeLessThan(1.4); // short sounds repeat 3×, held sounds ~0.5 s
     }
   });
   it('every number 1–20 was confirmed by speech recognition (normal + slow), incl. 13 vs 30', () => {
@@ -336,5 +340,125 @@ describe('branding', () => {
   });
   it('share message has the agreed text', () => {
     expect(T.share.message).toBe("מוזמנים ללמוד אנגלית עם נועה! 🌸\nהיכנסו ל-Noa's English World, משחקים, מקשיבים ולומדים אנגלית ביחד!");
+  });
+});
+
+// ------------------------------------------------------------------ v3: Hebrew instructions, Hebrew audio, handwriting, phonics v2
+
+describe('instructions are Hebrew; English only as learning content', () => {
+  const save = emptySave();
+  const games: GameId[] = ['letterName', 'letterSound', 'letterLook', 'letterPairs', 'missingLetter', 'firstLetter', 'trace', 'hearNumber', 'teens', 'count', 'numberWord', 'numberMemory', 'hearColor', 'findColor', 'colorWord', 'paint', 'wordPicture', 'pictureWord', 'hearWord', 'whichWord', 'wordFirst', 'wordGap'];
+  const qs = [...games.flatMap((g) => buildGame(g, save, 12, { rnd: rng(11) })), ...buildListeningLab(save, 30, rng(12)), ...buildExam(rng(13))];
+  it('every instruction is written in Hebrew', () => {
+    for (const q of qs) expect(/[\u0590-\u05FF]/.test(q.prompt.he), q.prompt.he).toBe(true);
+  });
+  it('no English sentence is shown as the instruction (only as listening content or in learning-mode colouring)', () => {
+    for (const q of qs) {
+      if (!q.prompt.en) continue;
+      const ok = q.listening || (q.kind === 'paint' && q.area === 'colors');
+      expect(ok, `${q.prompt.he} / ${q.prompt.en}`).toBe(true);
+    }
+  });
+  it('the old English operating instructions are gone from the audio', () => {
+    for (const q of qs) for (const id of q.prompt.audio) expect(id.startsWith('prompt-') || id.startsWith('find-letter-') || id.startsWith('fb-'), id).toBe(false);
+  });
+  it('listening tasks in the lab and the exam do not reveal the answer in the Hebrew line', () => {
+    for (const q of [...buildListeningLab(save, 30, rng(14)), ...buildExam(rng(15)).filter((x) => x.area === 'listening')]) {
+      expect(q.listening).toBe(true);
+      expect(q.prompt.he).not.toMatch(/\{w:|\{c:|\{n:/);
+    }
+  });
+});
+
+describe('spoken Hebrew', () => {
+  it('every spoken Hebrew segment has a recording (normal + slow) by the Hebrew voice', () => {
+    const idx = heClips as Record<string, string>;
+    for (const seg of spokenHebrewSegments()) {
+      const id = heClipId(seg);
+      expect(idx[id], seg).toBe(seg);
+      expect(exists(ttsPath(id)) && exists(ttsPath(id, true)), seg).toBe(true);
+    }
+  });
+  it('the Hebrew voice never reads English: no Latin letters inside Hebrew segments', () => {
+    for (const seg of spokenHebrewSegments()) expect(/[A-Za-z]/.test(seg), seg).toBe(false);
+  });
+  it('mixed sentences are split into Hebrew and English parts in order', () => {
+    const t = T.q.paintLearn('ball', 'orange');
+    expect(parseMixed(t).map((x) => x.kind)).toEqual(['he', 'en', 'he', 'en']);
+    expect(speechClips(t).filter((x) => !x.startsWith('he-'))).toEqual(['word-ball', 'color-orange']);
+  });
+});
+
+describe('handwriting paths A–P', () => {
+  const jit = (pts: { x: number; y: number }[]) => pts.map((p, i) => ({ x: p.x + Math.sin(i * 1.7) * 1.5, y: p.y + Math.cos(i * 1.3) * 1.5 }));
+  it('every capital and small letter A–P has its own stroke paths within the writing lines', () => {
+    for (const set of [UPPER, LOWER]) {
+      expect(Object.keys(set).sort().join('')).toBe('abcdefghijklmnop');
+      for (const [id, strokes] of Object.entries(set)) {
+        expect(strokes.length, id).toBeGreaterThan(0);
+        for (const d of strokes) {
+          for (const p of samplePath(d)) {
+            expect(p.y, id).toBeGreaterThanOrEqual(19);
+            expect(p.y, id).toBeLessThanOrEqual(111);
+          }
+        }
+      }
+    }
+  });
+  it('capitals sit between the top line and the base line; x-height letters between the middle and base lines', () => {
+    for (const strokes of Object.values(UPPER)) {
+      const ys = strokes.flatMap((d) => samplePath(d).map((p) => p.y));
+      expect(Math.min(...ys)).toBeCloseTo(20, 0);
+      expect(Math.max(...ys)).toBeLessThanOrEqual(80.5);
+    }
+    for (const id of ['a', 'c', 'e', 'm', 'n', 'o'] as const) {
+      const ys = LOWER[id].flatMap((d) => samplePath(d).map((p) => p.y));
+      expect(Math.min(...ys), id).toBeGreaterThanOrEqual(49.5);
+      expect(Math.max(...ys), id).toBeLessThanOrEqual(80.5);
+    }
+  });
+  it('small a is the one-storey handwritten a: circle back from the right, then push up and pull down', () => {
+    expect(LOWER.a).toHaveLength(1);
+    const pts = samplePath(LOWER.a[0]);
+    expect(pts[0].x).toBeGreaterThan(60);
+    expect(pts[3].y).toBeLessThan(pts[0].y);
+    const last = pts[pts.length - 1];
+    expect(last.x).toBeCloseTo(64, 0);
+    expect(last.y).toBeCloseTo(80, 0);
+    expect(Math.min(...pts.map((p) => p.y))).toBeGreaterThanOrEqual(49.5);
+  });
+  it('accepts correct writing and rejects reversed, partial or lift-less writing for every letter', () => {
+    for (const set of [UPPER, LOWER]) {
+      for (const [id, strokes] of Object.entries(set)) {
+        const t = strokes.map((d) => samplePath(d, 1.2));
+        expect(checkWriting(t, t.map(jit)).ok, `${id} correct`).toBe(true);
+        if (t.some((s) => !isDot(s))) {
+          expect(checkWriting(t, t.map((s) => jit([...s].reverse()))).ok, `${id} reversed`).toBe(false);
+          expect(checkWriting(t, t.map((s) => jit(s.slice(0, Math.ceil(s.length / 2))))).ok, `${id} half`).toBe(false);
+        }
+        if (t.length > 1) expect(checkWriting(t, [jit(t.flat())]).ok, `${id} one stroke`).toBe(false);
+      }
+    }
+  });
+  it('never praises random finger movement', () => {
+    const t = UPPER.a.map((d) => samplePath(d));
+    const scribble = [Array.from({ length: 80 }, (_, i) => ({ x: 10 + i, y: 20 + (i % 20) * 4 }))];
+    expect(checkWriting(t, scribble).ok).toBe(false);
+    expect(checkWriting(t, []).ok).toBe(false);
+  });
+});
+
+describe('phonics sounds v2', () => {
+  it('every sound file is long enough to hear on a phone, and none is claimed as human-approved', () => {
+    for (const p of phonemeAudit as { id: string; totalMs: number; humanApproved: boolean }[]) {
+      expect(p.totalMs, p.id).toBeGreaterThanOrEqual(350);
+      expect(p.humanApproved, p.id).toBe(false);
+    }
+  });
+  it('plosives are short bursts (never stretched); vowels and m/n/l/f are held', () => {
+    const kinds = Object.fromEntries((phonemeAudit as { id: string; kind: string }[]).map((p) => [p.id, p.kind]));
+    for (const id of ['b', 'c', 'd', 'g', 'k', 'p', 't']) expect(kinds[id], id).toBe('burst');
+    for (const id of ['a', 'e', 'i', 'o']) expect(kinds[id], id).toBe('vowel');
+    for (const id of ['f', 'l', 'm', 'n']) expect(kinds[id], id).toBe('hold');
   });
 });

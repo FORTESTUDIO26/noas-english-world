@@ -9,6 +9,7 @@ interface Store {
   finishSession: (id: string, correct: number, total: number) => void;
   addExam: (e: ExamRecord) => void;
   setSlow: (slow: boolean) => void;
+  setResume: (sessionId: string, step: number | null) => void;
   reset: () => void;
 }
 
@@ -38,8 +39,13 @@ export function StoreProvider({ profileId, children }: { profileId: string; chil
   const addExam = useCallback((e: ExamRecord) => setSave((s) => ({ ...s, exams: [...s.exams, e].slice(-20) })), []);
   const setSlow = useCallback((slow: boolean) => setSave((s) => ({ ...s, settings: { ...s.settings, slow } })), []);
   const reset = useCallback(() => setSave(emptySave()), []);
+  const setResume = useCallback((id: string, step: number | null) => setSave((s) => {
+    const r = { ...(s.resume ?? {}) };
+    if (step === null) delete r[id]; else r[id] = step;
+    return { ...s, resume: r };
+  }), []);
 
-  const value = useMemo(() => ({ save, answer, markOpened, finishSession, addExam, setSlow, reset }), [save, answer, markOpened, finishSession, addExam, setSlow, reset]);
+  const value = useMemo(() => ({ save, answer, markOpened, finishSession, addExam, setSlow, reset, setResume }), [save, answer, markOpened, finishSession, addExam, setSlow, reset, setResume]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

@@ -517,3 +517,56 @@ h1, h2, h3, p { margin: 0; }
   .options--8 { grid-template-columns: repeat(3, 1fr); }
   .pairs { gap: 12px 14px; }
 }
+
+/* ---------- v3: handwriting, mixed text, calmer question layout */
+.mx-en { font-family: var(--font-en); font-weight: 800; color: var(--purple-d); unicode-bidi: isolate; }
+.mx-latin { font-family: var(--font-en); unicode-bidi: isolate; }
+.prompt { flex-direction: column; align-items: stretch; }
+.prompt__he { font-size: 1.3rem; line-height: 1.45; }
+.prompt__actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.btn--soft { background: var(--teal-l); color: #0b6f6f; box-shadow: 0 3px 0 #b7e7e5; min-height: 48px; padding: 8px 16px; font-size: 1rem; }
+.runner__help { display: block; margin: -6px 0 6px auto; font-size: .95rem; }
+.intro--game .intro__text { font-size: 1.25rem; line-height: 1.6; max-width: 520px; background: #fff; border-radius: 20px; padding: 14px 18px; box-shadow: var(--shadow); }
+.hint--good { color: #157a3c; font-weight: 800; }
+.after--saved { background: var(--blue-l); }
+.hw { display: grid; gap: 10px; justify-items: center; }
+.hw__pad { width: min(100%, 340px); background: #fff; border-radius: 24px; box-shadow: inset 0 0 0 3px var(--purple-l); overflow: hidden; }
+.hw__svg { display: block; width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; }
+.hw__line { stroke: #cdb9ea; stroke-width: .7; }
+.hw__line--top { stroke: #b89ce0; }
+.hw__line--mid { stroke-dasharray: 2.2 2.2; }
+.hw__line--base { stroke: #7b4fc2; stroke-width: 1; }
+.hw__line--desc { stroke: #d9c9f0; stroke-dasharray: 1.5 2.5; }
+.hw__model { fill: none; stroke: #e2d4f7; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.hw__model-dash { fill: none; stroke: #9b6fdc; stroke-width: 1.3; stroke-dasharray: 2.4 2.4; stroke-linecap: round; }
+.hw__model-dot { fill: #e2d4f7; }
+.hw__arrow { fill: #ff8a1f; }
+.hw__demo { fill: none; stroke: var(--purple); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+.hw__demo-dot { fill: var(--purple); }
+.hw__pen { fill: #ffd23f; stroke: #33203f; stroke-width: 1; }
+.hw__ink { fill: none; stroke: #ff4fa3; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
+.hw__ink-dot { fill: #ff4fa3; }
+.hw__start circle { fill: #22a95b; stroke: #fff; stroke-width: 1.2; }
+.hw__start text { fill: #fff; font: 800 5.4px var(--font-en); }
+.hw__start.is-next circle { animation: hwpulse .6s ease-in-out infinite alternate; transform-origin: center; }
+@keyframes hwpulse { to { r: 6.2; } }
+.hw__tip { font-size: .95rem; color: var(--ink-soft); text-align: center; max-width: 340px; }
+.hw__actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.lesson__all { display: flex; justify-content: center; }
+.speaker-wrap--all .speaker { background: var(--purple); box-shadow: 0 4px 0 var(--purple-d); }
+
+/* ---------- QA screen */
+.qa-head { width: 100%; border: 0; background: transparent; text-align: start; font: inherit; font-weight: 800; font-size: 1.1rem; min-height: 44px; cursor: pointer; }
+.qa-head small { font-weight: 600; color: var(--ink-soft); }
+.qa-counts { font-weight: 700; }
+.qa-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.qa-row { border-radius: 14px; padding: 8px 10px; background: #faf7fe; display: grid; gap: 6px; }
+.qa-row.is-ok { background: #effaf3; }
+.qa-row.is-fix { background: #fff2ee; }
+.qa-row__main { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; align-items: baseline; }
+.qa-row__label { font-weight: 700; }
+.qa-row__state { font-size: .85rem; color: var(--ink-soft); }
+.qa-row__btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.qa-row__note { font: inherit; padding: 8px 10px; border-radius: 10px; border: 2px solid var(--purple-l); }
+.qa-rec__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-bottom: 10px; }
+.qa-rec__item { display: grid; gap: 4px; justify-items: start; background: #faf7fe; border-radius: 12px; padding: 8px; }

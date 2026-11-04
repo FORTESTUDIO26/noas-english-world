@@ -44,6 +44,8 @@ export interface Save {
   /** cards opened (only informative, never counts as learned) */
   opened: Record<string, number>;
   settings: { slow: boolean };
+  /** step to continue from, per meeting that was left in the middle */
+  resume?: Record<string, number>;
 }
 
 

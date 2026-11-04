@@ -6,14 +6,18 @@
    "word": "at",
    "part": "vowel"
   },
-  "durMs": 215,
-  "note": "vowel 215ms",
+  "kind": "vowel",
+  "cutMs": 285,
+  "totalMs": 557,
+  "note": "vowel 285ms",
   "checks": {
-   "durationOk": true,
+   "cutLengthOk": true,
    "noVowelAfterVoiceless": true,
-   "shortVowelTailForStops": true
+   "noVowelAfterVoicedStop": true,
+   "audibleLength": true
   },
-  "autoOk": true
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "b",
@@ -22,14 +26,18 @@
    "word": "bat",
    "part": "onset"
   },
-  "durMs": 55,
-  "note": "release+35ms (prevoice 10ms)",
+  "kind": "burst",
+  "cutMs": 60,
+  "totalMs": 1056,
+  "note": "release+35ms (prevoice 15ms)",
   "checks": {
-   "durationOk": true,
+   "cutLengthOk": true,
    "noVowelAfterVoiceless": true,
-   "shortVowelTailForStops": true
+   "noVowelAfterVoicedStop": true,
+   "audibleLength": true
   },
-  "autoOk": true
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "c",
@@ -38,14 +46,18 @@
    "word": "cap",
    "part": "onset"
   },
-  "durMs": 65,
-  "note": "voiceless 70ms",
+  "kind": "burst",
+  "cutMs": 50,
+  "totalMs": 1026,
+  "note": "voiceless 40ms",
   "checks": {
-   "durationOk": true,
+   "cutLengthOk": true,
    "noVowelAfterVoiceless": true,
-   "shortVowelTailForStops": true
+   "noVowelAfterVoicedStop": true,
+   "audibleLength": true
   },
-  "autoOk": true
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "d",
@@ -54,14 +66,18 @@
    "word": "dad",
    "part": "onset"
   },
-  "durMs": 45,
+  "kind": "burst",
+  "cutMs": 45,
+  "totalMs": 1011,
   "note": "release+35ms (prevoice 0ms)",
   "checks": {
-   "durationOk": true,
+   "cutLengthOk": true,
    "noVowelAfterVoiceless": true,
-   "shortVowelTailForStops": true
+   "noVowelAfterVoicedStop": true,
+   "audibleLength": true
   },
-  "autoOk": true
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "e",
@@ -70,14 +86,18 @@
    "word": "etch",
    "part": "vowel"
   },
-  "durMs": 165,
-  "note": "vowel 165ms",
+  "kind": "vowel",
+  "cutMs": 235,
+  "totalMs": 557,
+  "note": "vowel 235ms",
   "checks": {
-   "durationOk": true,
+   "cutLengthOk": true,
    "noVowelAfterVoiceless": true,
-   "shortVowelTailForStops": true
+   "noVowelAfterVoicedStop": true,
+   "audibleLength": true
   },
-  "autoOk": true
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "f",
@@ -86,15 +106,18 @@
    "word": "off",
    "part": "coda"
   },
-  "durMs": 185,
-  "heldMs": 322,
+  "kind": "hold",
+  "cutMs": 170,
+  "totalMs": 642,
   "note": "fricative 175ms",
   "checks": {
-   "durationOk": true,
+   "cutLengthOk": true,
    "noVowelAfterVoiceless": true,
-   "shortVowelTailForStops": true
+   "noVowelAfterVoicedStop": true,
+   "audibleLength": true
   },
-  "autoOk": true
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "g",
@@ -103,14 +126,18 @@
    "word": "gap",
    "part": "onset"
   },
-  "durMs": 65,
-  "note": "release+35ms (prevoice 20ms)",
+  "kind": "burst",
+  "cutMs": 70,
+  "totalMs": 1086,
+  "note": "release+35ms (prevoice 25ms)",
   "checks": {
-   "durationOk": true,
+   "cutLengthOk": true,
    "noVowelAfterVoiceless": true,
-   "shortVowelTailForStops": true
+   "noVowelAfterVoicedStop": true,
+   "audibleLength": true
   },
-  "autoOk": true
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "h",
@@ -119,14 +146,18 @@
    "word": "hat",
    "part": "onset"
   },
-  "durMs": 60,
-  "note": "voiceless 65ms",
+  "kind": "burst",
+  "cutMs": 50,
+  "totalMs": 1026,
+  "note": "voiceless 40ms",
   "checks": {
-   "durationOk": true,
+   "cutLengthOk": true,
    "noVowelAfterVoiceless": true,
-   "shortVowelTailForStops": true
+   "noVowelAfterVoicedStop": true,
+   "audibleLength": true
   },
-  "autoOk": true
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "i",
@@ -135,14 +166,18 @@
    "word": "it",
    "part": "vowel"
   },
-  "durMs": 120,
-  "note": "vowel 120ms",
+  "kind": "vowel",
+  "cutMs": 165,
+  "totalMs": 562,
+  "note": "vowel 165ms",
   "checks": {
-   "durationOk": true,
+   "cutLengthOk": true,
    "noVowelAfterVoiceless": true,
-   "shortVowelTailForStops": true
+   "noVowelAfterVoicedStop": true,
+   "audibleLength": true
   },
-  "autoOk": true
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "j",
@@ -151,14 +186,18 @@
    "word": "jet",
    "part": "onset"
   },
-  "durMs": 90,
-  "note": "affricate 70ms",
+  "kind": "burst",
+  "cutMs": 105,
+  "totalMs": 1191,
+  "note": "affricate 85ms",
   "checks": {
-   "durationOk": true,
+   "cutLengthOk": true,
    "noVowelAfterVoiceless": true,
-   "shortVowelTailForStops": true
+   "noVowelAfterVoicedStop": true,
+   "audibleLength": true
   },
-  "autoOk": true
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "k",
@@ -167,14 +206,18 @@
    "word": "cap",
    "part": "onset"
   },
-  "durMs": 65,
-  "note": "voiceless 70ms",
+  "kind": "burst",
+  "cutMs": 50,
+  "totalMs": 1026,
+  "note": "voiceless 40ms",
   "checks": {
-   "durationOk": true,
+   "cutLengthOk": true,
    "noVowelAfterVoiceless": true,
-   "shortVowelTailForStops": true
+   "noVowelAfterVoicedStop": true,
+   "audibleLength": true
   },
-  "autoOk": true
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "l",
@@ -183,15 +226,18 @@
    "word": "lap",
    "part": "onset"
   },
-  "durMs": 85,
-  "heldMs": 322,
-  "note": "lateral 75ms",
+  "kind": "hold",
+  "cutMs": 95,
+  "totalMs": 642,
+  "note": "lateral 100ms",
   "checks": {
-   "durationOk": true,
+   "cutLengthOk": true,
    "noVowelAfterVoiceless": true,
-   "shortVowelTailForStops": true
+   "noVowelAfterVoicedStop": true,
+   "audibleLength": true
   },
-  "autoOk": true
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "m",
@@ -200,15 +246,18 @@
    "word": "am",
    "part": "coda"
   },
-  "durMs": 165,
-  "heldMs": 327,
-  "note": "nasal 165ms",
+  "kind": "hold",
+  "cutMs": 220,
+  "totalMs": 642,
+  "note": "nasal 220ms",
   "checks": {
-   "durationOk": true,
+   "cutLengthOk": true,
    "noVowelAfterVoiceless": true,
-   "shortVowelTailForStops": true
+   "noVowelAfterVoicedStop": true,
+   "audibleLength": true
   },
-  "autoOk": true
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "n",
@@ -217,15 +266,18 @@
    "word": "an",
    "part": "coda"
   },
-  "durMs": 185,
-  "heldMs": 322,
-  "note": "nasal 185ms",
+  "kind": "hold",
+  "cutMs": 265,
+  "totalMs": 662,
+  "note": "nasal 265ms",
   "checks": {
-   "durationOk": true,
+   "cutLengthOk": true,
    "noVowelAfterVoiceless": true,
-   "shortVowelTailForStops": true
+   "noVowelAfterVoicedStop": true,
+   "audibleLength": true
   },
-  "autoOk": true
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "o",
@@ -234,14 +286,18 @@
    "word": "ox",
    "part": "vowel"
   },
-  "durMs": 160,
+  "kind": "vowel",
+  "cutMs": 160,
+  "totalMs": 557,
   "note": "vowel 160ms",
   "checks": {
-   "durationOk": true,
+   "cutLengthOk": true,
    "noVowelAfterVoiceless": true,
-   "shortVowelTailForStops": true
+   "noVowelAfterVoicedStop": true,
+   "audibleLength": true
   },
-  "autoOk": true
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "p",
@@ -250,14 +306,18 @@
    "word": "pat",
    "part": "onset"
   },
-  "durMs": 70,
-  "note": "voiceless 75ms",
+  "kind": "burst",
+  "cutMs": 50,
+  "totalMs": 1026,
+  "note": "voiceless 40ms",
   "checks": {
-   "durationOk": true,
+   "cutLengthOk": true,
    "noVowelAfterVoiceless": true,
-   "shortVowelTailForStops": true
+   "noVowelAfterVoicedStop": true,
+   "audibleLength": true
   },
-  "autoOk": true
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "t",
@@ -266,13 +326,17 @@
    "word": "tap",
    "part": "onset"
   },
-  "durMs": 65,
-  "note": "voiceless 70ms",
+  "kind": "burst",
+  "cutMs": 50,
+  "totalMs": 1026,
+  "note": "voiceless 40ms",
   "checks": {
-   "durationOk": true,
+   "cutLengthOk": true,
    "noVowelAfterVoiceless": true,
-   "shortVowelTailForStops": true
+   "noVowelAfterVoicedStop": true,
+   "audibleLength": true
   },
-  "autoOk": true
+  "autoOk": true,
+  "humanApproved": false
  }
 ]

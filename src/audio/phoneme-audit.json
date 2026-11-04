@@ -3,102 +3,170 @@
   "id": "a",
   "ipa": "æ",
   "carrier": "at",
-  "autoOk": true
+  "kind": "vowel",
+  "cutMs": 285,
+  "totalMs": 557,
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "b",
   "ipa": "b",
   "carrier": "bat",
-  "autoOk": true
+  "kind": "burst",
+  "cutMs": 60,
+  "totalMs": 1056,
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "c",
   "ipa": "k",
   "carrier": "cap",
-  "autoOk": true
+  "kind": "burst",
+  "cutMs": 50,
+  "totalMs": 1026,
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "d",
   "ipa": "d",
   "carrier": "dad",
-  "autoOk": true
+  "kind": "burst",
+  "cutMs": 45,
+  "totalMs": 1011,
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "e",
   "ipa": "ɛ",
   "carrier": "etch",
-  "autoOk": true
+  "kind": "vowel",
+  "cutMs": 235,
+  "totalMs": 557,
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "f",
   "ipa": "f",
   "carrier": "off",
-  "autoOk": true
+  "kind": "hold",
+  "cutMs": 170,
+  "totalMs": 642,
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "g",
   "ipa": "g",
   "carrier": "gap",
-  "autoOk": true
+  "kind": "burst",
+  "cutMs": 70,
+  "totalMs": 1086,
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "h",
   "ipa": "h",
   "carrier": "hat",
-  "autoOk": true
+  "kind": "burst",
+  "cutMs": 50,
+  "totalMs": 1026,
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "i",
   "ipa": "ɪ",
   "carrier": "it",
-  "autoOk": true
+  "kind": "vowel",
+  "cutMs": 165,
+  "totalMs": 562,
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "j",
   "ipa": "dʒ",
   "carrier": "jet",
-  "autoOk": true
+  "kind": "burst",
+  "cutMs": 105,
+  "totalMs": 1191,
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "k",
   "ipa": "k",
   "carrier": "cap",
-  "autoOk": true
+  "kind": "burst",
+  "cutMs": 50,
+  "totalMs": 1026,
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "l",
   "ipa": "l",
   "carrier": "lap",
-  "autoOk": true
+  "kind": "hold",
+  "cutMs": 95,
+  "totalMs": 642,
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "m",
   "ipa": "m",
   "carrier": "am",
-  "autoOk": true
+  "kind": "hold",
+  "cutMs": 220,
+  "totalMs": 642,
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "n",
   "ipa": "n",
   "carrier": "an",
-  "autoOk": true
+  "kind": "hold",
+  "cutMs": 265,
+  "totalMs": 662,
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "o",
   "ipa": "ɑ",
   "carrier": "ox",
-  "autoOk": true
+  "kind": "vowel",
+  "cutMs": 160,
+  "totalMs": 557,
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "p",
   "ipa": "p",
   "carrier": "pat",
-  "autoOk": true
+  "kind": "burst",
+  "cutMs": 50,
+  "totalMs": 1026,
+  "autoOk": true,
+  "humanApproved": false
  },
  {
   "id": "t",
   "ipa": "t",
   "carrier": "tap",
-  "autoOk": true
+  "kind": "burst",
+  "cutMs": 50,
+  "totalMs": 1026,
+  "autoOk": true,
+  "humanApproved": false
  }
 ]

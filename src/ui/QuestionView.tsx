@@ -1,22 +1,32 @@
 import { useEffect, useRef, useState } from 'react';
 import { T } from '../text/he.ts';
 import type { ChoiceQ, Question } from '../learn/questions.ts';
-import { letter } from '../content/letters.ts';
 import { audio } from '../audio/player.ts';
 import { clipId } from '../audio/clips.ts';
 import { useStore } from '../state/store.tsx';
 import { Speaker, playClips } from './Speaker.tsx';
 import { VisualView } from './VisualView.tsx';
-import { TracePad } from './TracePad.tsx';
+import { HandwritingPad, writeMessage } from './HandwritingPad.tsx';
 import { PairsBoard, PaintTask, type Mode, type SkillResult } from './tasks.tsx';
-import { IconHelp } from './icons.tsx';
+import { IconHelp, IconSpeaker } from './icons.tsx';
+import { MixedText } from './MixedText.tsx';
+import { speechClips } from '../audio/speech.ts';
 import { Guide } from '../art/Guide.tsx';
 
 export type { Mode, SkillResult };
 
 const PRAISE = T.feedback.praise;
 
-export function QuestionView({ q, mode, onAnswered, onNext, nextLabel = T.common.next, autoPlay = true }: {
+/**
+ * One question. Flow for the child:
+ *  1. the Hebrew instruction is shown and spoken (first time in a game; later
+ *     only on request), then the English content is played;
+ *  2. "שומעים שוב" repeats the English content, the turtle plays it slowly,
+ *     "ההוראה" repeats the Hebrew instruction;
+ *  3. after an answer the feedback stays until the child presses "הבא" –
+ *     nothing advances by itself, and feedback never cuts a playing sound.
+ */
+export function QuestionView({ q, mode, onAnswered, onNext, nextLabel = T.common.next, autoPlay = true, speakInstruction = true }: {
   q: Question;
   mode: Mode;
   /** first-try evidence for each skill in the question (called once) */
@@ -25,6 +35,8 @@ export function QuestionView({ q, mode, onAnswered, onNext, nextLabel = T.common
   nextLabel?: string;
   /** play the instruction when the question appears (off for quizzes embedded lower in a page) */
   autoPlay?: boolean;
+  /** speak the Hebrew instruction automatically (true the first time it appears in a game) */
+  speakInstruction?: boolean;
 }) {
   const { save } = useStore();
   const [finished, setFinished] = useState<null | 'right' | 'revealed'>(null);
@@ -32,6 +44,8 @@ export function QuestionView({ q, mode, onAnswered, onNext, nextLabel = T.common
   const reported = useRef(false);
   const exam = mode === 'exam';
   const slow = save.settings.slow;
+  const instr = speechClips(q.prompt.he);
+  const content = q.prompt.audio;
 
   const report = (r: SkillResult[]) => {
     if (reported.current) return;
@@ -43,49 +57,51 @@ export function QuestionView({ q, mode, onAnswered, onNext, nextLabel = T.common
     setFinished(null);
     setShowHelp(false);
     reported.current = false;
-    if (q.prompt.audio.length && autoPlay) {
-      const t = setTimeout(() => void playClips(q.prompt.audio, slow), 350);
-      return () => { clearTimeout(t); audio.stop(); };
-    }
-    return () => audio.stop();
+    if (!autoPlay) return () => audio.stop();
+    const seq = [...(speakInstruction ? instr : []), ...content];
+    const t = setTimeout(() => { if (seq.length) void audio.playSequence(seq, { slow, gapMs: 450 }); }, 400);
+    return () => { clearTimeout(t); audio.stop(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q.id]);
-
-  // Exam: move on right after an answer, no feedback.
-  useEffect(() => {
-    if (exam && finished) {
-      const t = setTimeout(onNext, 450);
-      return () => clearTimeout(t);
-    }
-  }, [exam, finished, onNext]);
 
   const hideEn = q.listening && !finished;
   const helpAllowed = mode === 'practice' || mode === 'lab-learn';
 
   const done = (kind: 'right' | 'revealed', after?: string) => {
     setFinished(kind);
-    if (!exam && kind === 'right') {
-      if (after) void audio.play(after);
-      else void audio.play(clipId.feedback(Math.random() < 0.5 ? 'great' : 'wellDone'));
+    if (exam) return;
+    if (kind === 'right') {
+      const praise = PRAISE[Math.floor(Math.random() * PRAISE.length)];
+      setPraise(praise);
+      void audio.enqueue([...speechClips(praise), ...(after ? [after] : [])], { slow, gapMs: 400 });
     }
   };
+  const [praise, setPraise] = useState(PRAISE[0]);
 
   return (
     <div className={`question question--${q.kind}`}>
       <div className="prompt">
-        {q.prompt.audio.length > 0 && <Speaker clips={q.prompt.audio} size="l" withSlow label={T.common.again} />}
-        <div className="prompt__text">
-          <p className="prompt__he">{q.prompt.he}</p>
-          {q.prompt.en && !hideEn && <p className="prompt__en" dir="ltr" lang="en">{q.prompt.en}</p>}
-          {q.prompt.en && hideEn && <p className="prompt__en prompt__en--hidden" aria-hidden>{T.common.listenHidden}</p>}
+        <p className="prompt__he"><MixedText text={q.prompt.he} /></p>
+        {q.prompt.en && !hideEn && <p className="prompt__en" dir="ltr" lang="en">{q.prompt.en}</p>}
+        <div className="prompt__actions">
+          {content.length > 0 && <Speaker clips={content} size="l" withSlow label={T.common.listenAgain} />}
+          {instr.length > 0 && (
+            <button type="button" className="btn btn--soft" onClick={() => void playClips(instr, slow)} aria-label={T.common.instruction}>
+              <IconSpeaker size={20} /> {T.common.instruction}
+            </button>
+          )}
+          {helpAllowed && q.prompt.helpHe && !finished && (
+            <button type="button" className="btn btn--soft" onClick={() => {
+              const open = !showHelp;
+              setShowHelp(open);
+              if (open) void playClips(speechClips(q.prompt.helpHe!), slow);
+            }} aria-expanded={showHelp}>
+              <IconHelp /> {T.common.helpHe}
+            </button>
+          )}
         </div>
-        {helpAllowed && q.prompt.helpHe && !finished && (
-          <button type="button" className="btn btn--icon" onClick={() => setShowHelp((x) => !x)} aria-expanded={showHelp} aria-label={T.common.helpHe}>
-            <IconHelp />
-          </button>
-        )}
       </div>
-      {showHelp && q.prompt.helpHe && <p className="help-he">{q.prompt.helpHe}</p>}
+      {showHelp && q.prompt.helpHe && <p className="help-he"><MixedText text={q.prompt.helpHe} /></p>}
 
       {q.kind === 'choice' && <ChoiceBody q={q} mode={mode} report={report} done={done} finished={finished} />}
       {q.kind === 'pairs' && (
@@ -98,23 +114,25 @@ export function QuestionView({ q, mode, onAnswered, onNext, nextLabel = T.common
         <TraceBody q={q} mode={mode} report={report} done={done} finished={finished} />
       )}
 
+      {finished && exam && (
+        <div className="after after--saved" role="status">
+          <span className="after__text"><strong>{T.exam.saved}</strong></span>
+          <button type="button" className="btn btn--primary btn--next" onClick={onNext}>{nextLabel}</button>
+        </div>
+      )}
       {finished && !exam && (
         <div className={`after after--${finished}`} role="status">
           <Guide size={64} mood={finished === 'right' ? 'cheer' : 'think'} />
           <div className="after__text">
-            <strong>{finished === 'right' ? PRAISE[Math.floor(Math.random() * PRAISE.length)] : T.feedback.learnIt}</strong>
+            <strong>{finished === 'right' ? praise : T.feedback.learnIt}</strong>
             {q.listening && q.prompt.en && <span className="after__en" dir="ltr" lang="en">{q.prompt.en}</span>}
-            <span>{explainOf(q)}</span>
+            <span><MixedText text={q.explainHe} /></span>
           </div>
           <button type="button" className="btn btn--primary btn--next" onClick={onNext}>{nextLabel}</button>
         </div>
       )}
     </div>
   );
-}
-
-function explainOf(q: Question) {
-  return q.explainHe;
 }
 
 function ChoiceBody({ q, mode, report, done, finished }: {
@@ -138,7 +156,7 @@ function ChoiceBody({ q, mode, report, done, finished }: {
     if (right) { done('right', q.afterAudio); return; }
     const w = new Set(wrong).add(i);
     setWrong(w);
-    void audio.play(clipId.feedback('tryAgain'));
+    void audio.enqueue(speechClips(T.feedback.tryAgain));
     if (w.size >= 2 || w.size >= q.options.length - 1) done('revealed');
   };
 
@@ -174,6 +192,7 @@ function ChoiceBody({ q, mode, report, done, finished }: {
           );
         })}
       </div>
+      {!exam && !finished && wrong.size > 0 && <p className="hint hint--oops" role="status">{T.feedback.tryAgainHint}</p>}
     </>
   );
 }
@@ -185,19 +204,17 @@ function TraceBody({ q, mode, report, done, finished }: {
   done: (k: 'right' | 'revealed', after?: string) => void;
   finished: null | 'right' | 'revealed';
 }) {
-  const l = letter(q.letter);
-  const glyph = q.case === 'upper' ? l.upper : l.lower;
   const [tries, setTries] = useState(0);
   const [msg, setMsg] = useState<string | null>(null);
   const [key, setKey] = useState(0);
   useEffect(() => { setTries(0); setMsg(null); setKey((k) => k + 1); }, [q.id]);
   return (
     <div className="trace-wrap">
-      <TracePad key={key} glyph={glyph} disabled={!!finished} onDone={(s) => {
-        if (tries === 0) report([{ skill: q.skill, correct: s.ok }]);
+      <HandwritingPad key={key} letter={q.letter} which={q.case} hints={mode !== 'exam'} demo={mode !== 'exam'} disabled={!!finished} onResult={(r) => {
+        if (tries === 0) report([{ skill: q.skill, correct: r.ok }]);
         setTries(tries + 1);
-        if (s.ok || mode === 'exam') { done(s.ok ? 'right' : 'revealed', clipId.letterName(q.letter)); return; }
-        setMsg(s.coverage < 0.6 ? T.letters.traceMore : T.letters.traceInside);
+        if (r.ok || mode === 'exam') { done(r.ok ? 'right' : 'revealed', clipId.letterName(q.letter)); return; }
+        setMsg(writeMessage(r));
         if (tries + 1 >= 3) done('revealed');
         else setKey((k) => k + 1);
       }} />

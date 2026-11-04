@@ -10,24 +10,26 @@ export function usePlaying(ids: string[]) {
   return on;
 }
 
-export function playClips(ids: string[], slow = false): Promise<PlayResult> {
-  return ids.length === 1 ? audio.play(ids[0], { slow }) : audio.playSequence(ids, { slow });
+export function playClips(ids: string[], slow = false, gapMs?: number): Promise<PlayResult> {
+  return ids.length === 1 ? audio.play(ids[0], { slow }) : audio.playSequence(ids, { slow, gapMs });
 }
 
 /** Big round speaker button, optionally with a label and a slow (turtle) twin. */
-export function Speaker({ clips, label, size = 'm', withSlow = false, className = '', children }: {
+export function Speaker({ clips, label, size = 'm', withSlow = false, className = '', children, gapMs }: {
   clips: string[];
   label?: string;
   size?: 's' | 'm' | 'l';
   withSlow?: boolean;
   className?: string;
   children?: ReactNode;
+  /** pause between clips when several are played */
+  gapMs?: number;
 }) {
   const playing = usePlaying(clips);
   const [msg, setMsg] = useState<string | null>(null);
   const run = async (slow: boolean) => {
     setMsg(null);
-    const r = await playClips(clips, slow);
+    const r = await playClips(clips, slow, gapMs);
     if (r === 'missing') setMsg(T.audio.missing);
     if (r === 'blocked') setMsg(T.audio.blocked);
   };

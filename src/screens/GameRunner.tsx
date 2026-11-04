@@ -1,11 +1,14 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { audio } from '../audio/player.ts';
+import { speechClips } from '../audio/speech.ts';
+import { MixedText } from '../ui/MixedText.tsx';
 import { T } from '../text/he.ts';
 import type { Question } from '../learn/questions.ts';
 import { QuestionView, type Mode, type SkillResult } from '../ui/QuestionView.tsx';
 import { useStore } from '../state/store.tsx';
 import { skillLabel, recommend } from '../learn/labels.ts';
 import { Guide } from '../art/Guide.tsx';
-import { IconStar } from '../ui/icons.tsx';
+import { IconStar, IconSpeaker } from '../ui/icons.tsx';
 
 export interface RunResult {
   correct: number;
@@ -16,7 +19,7 @@ export interface RunResult {
 }
 
 /** Plays a list of questions, saves first-try evidence, then shows a short summary. */
-export function GameRunner({ questions, mode = 'practice', title, onFinish, onExit, summary = true, finishLabel = T.common.finish }: {
+export function GameRunner({ questions, mode = 'practice', title, onFinish, onExit, summary = true, finishLabel = T.common.finish, introKey }: {
   questions: Question[];
   mode?: Mode;
   title: string;
@@ -24,8 +27,14 @@ export function GameRunner({ questions, mode = 'practice', title, onFinish, onEx
   onExit: () => void;
   summary?: boolean;
   finishLabel?: string;
+  /** key in T.intro: explained (spoken) the first time this game is opened by this profile */
+  introKey?: IntroKey;
 }) {
-  const { answer } = useStore();
+  const { answer, save, markOpened } = useStore();
+  const seenIntro = !introKey || !!save.opened[`intro:${introKey}`];
+  const [showIntro, setShowIntro] = useState(!seenIntro);
+  /** Hebrew instructions already spoken in this run (said once, then on request) */
+  const heard = useRef(new Set<string>());
   const [i, setI] = useState(0);
   const results = useRef<SkillResult[]>([]);
   const [ended, setEnded] = useState<RunResult | null>(null);
@@ -49,8 +58,13 @@ export function GameRunner({ questions, mode = 'practice', title, onFinish, onEx
   }, [i, questions.length, summary, onFinish]);
 
   if (!questions.length) return <p className="empty">{T.common.noQuestions}</p>;
+  if (showIntro && introKey) {
+    return <Intro text={T.intro[introKey]} onGo={() => { markOpened(`intro:${introKey}`); setShowIntro(false); }} />;
+  }
   if (ended) return <RunSummary title={title} r={ended} onDone={() => (onFinish ? onFinish(ended) : onExit())} doneLabel={finishLabel} />;
   const q = questions[i];
+  const speak = !heard.current.has(q.prompt.he);
+  heard.current.add(q.prompt.he);
   return (
     <div className="runner">
       <div className="runner__top">
@@ -60,7 +74,34 @@ export function GameRunner({ questions, mode = 'practice', title, onFinish, onEx
         </div>
         <span className="runner__count" dir="ltr">{i + 1}/{questions.length}</span>
       </div>
-      <QuestionView key={q.id} q={q} mode={mode} onAnswered={onAnswered} onNext={next} nextLabel={i + 1 < questions.length ? T.common.next : T.common.finish} />
+      {introKey && (
+        <button type="button" className="link-btn runner__help" onClick={() => setShowIntro(true)}>{T.intro.fullHelp}</button>
+      )}
+      <QuestionView key={q.id} q={q} mode={mode} onAnswered={onAnswered} onNext={next} speakInstruction={speak} nextLabel={i + 1 < questions.length ? T.common.next : T.common.finish} />
+    </div>
+  );
+}
+
+export type IntroKey = Exclude<keyof typeof T.intro, 'gotIt' | 'fullHelp' | 'title'>;
+
+/** "How to play" card: shown and spoken the first time, then available on request. */
+export function Intro({ text, onGo }: { text: string; onGo: () => void }) {
+  const { save } = useStore();
+  useEffect(() => {
+    const t = setTimeout(() => void audio.playSequence(speechClips(text), { slow: save.settings.slow }), 300);
+    return () => { clearTimeout(t); audio.stop(); };
+  }, [text]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <div className="intro intro--game">
+      <Guide size={110} mood="happy" />
+      <h2>{T.intro.title}</h2>
+      <p className="intro__text"><MixedText text={text} /></p>
+      <div className="row-center">
+        <button type="button" className="btn btn--soft" onClick={() => void audio.playSequence(speechClips(text), { slow: save.settings.slow })}>
+          <IconSpeaker size={20} /> {T.common.listenAgain}
+        </button>
+      </div>
+      <button type="button" className="btn btn--primary btn--wide" onClick={onGo}>{T.intro.gotIt}</button>
     </div>
   );
 }

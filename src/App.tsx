@@ -8,7 +8,8 @@ import { NumbersWorld, ColorsWorld, WordsWorld } from './screens/Worlds.tsx';
 import { PathScreen, SessionScreen } from './screens/Path.tsx';
 import { ExamScreen } from './screens/Exam.tsx';
 import { LabScreen } from './screens/Lab.tsx';
-import { ParentsScreen, SoundCheckScreen } from './screens/Parents.tsx';
+import { ParentsScreen } from './screens/Parents.tsx';
+import { SoundCheckScreen } from './screens/QA.tsx';
 import { GameRunner } from './screens/GameRunner.tsx';
 import { Screen } from './ui/Screen.tsx';
 import { buildGame, type GameId } from './learn/questions.ts';
@@ -19,6 +20,7 @@ import { ProfilesScreen } from './screens/Profiles.tsx';
 import { ProfileCtx } from './state/profileCtx.tsx';
 import { deleteProfile, loadProfiles, requestPersistentStorage, selectProfile } from './state/profiles.ts';
 import { UpdateBanner } from './ui/UpdateBanner.tsx';
+import { audio } from './audio/player.ts';
 
 function GameScreen({ game, title, letters, onExit }: { game: GameId; title: string; letters?: LetterId[]; onExit: () => void }) {
   const { save } = useStore();
@@ -26,7 +28,7 @@ function GameScreen({ game, title, letters, onExit }: { game: GameId; title: str
   const qs = useMemo(() => buildGame(game, save, game === 'letterPairs' || game === 'numberMemory' ? 3 : 8, { letters }), [game, round]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <Screen title={title}>
-      <GameRunner key={round} questions={qs} title={title} onExit={onExit} onFinish={() => setRound(round + 1)} finishLabel={T.games.anotherRound} />
+      <GameRunner key={round} questions={qs} title={title} onExit={onExit} onFinish={() => setRound(round + 1)} finishLabel={T.games.anotherRound} introKey={game} />
     </Screen>
   );
 }
@@ -54,6 +56,8 @@ function Router() {
   }, []);
 
   const nav = useMemo(() => ({ go, back, home }), [go, back, home]);
+  // Leaving a screen always silences it: no sound carries over to the next screen.
+  useEffect(() => { audio.stop(); }, [stack]);
   const r = stack[stack.length - 1];
 
   let page: React.ReactNode;

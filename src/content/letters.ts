@@ -31,7 +31,7 @@ export const LETTERS: Letter[] = [
   { id: 'f', upper: 'F', lower: 'f', ipa: 'f', soundHe: 'פ׳ רכה (פְפְפְ), נשיפה', example: 'fish', exampleHe: 'דג', picture: 'fish', carrier: { word: 'off', part: 'coda' } },
   { id: 'g', upper: 'G', lower: 'g', ipa: 'g', soundHe: 'ג׳ קצרה, כמו בתחילת go', example: 'goat', exampleHe: 'עז', picture: 'goat', carrier: { word: 'gap', part: 'onset' } },
   { id: 'h', upper: 'H', lower: 'h', ipa: 'h', soundHe: 'ה׳ – נשיפה קלה', example: 'hat', exampleHe: 'כובע', picture: 'hat', carrier: { word: 'hat', part: 'onset' } },
-  { id: 'i', upper: 'I', lower: 'i', ipa: 'ɪ', soundHe: 'אִ קצרה, כמו בתחילת igloo', example: 'igloo', exampleHe: 'איגלו', picture: 'igloo', carrier: { word: 'it', part: 'vowel' } },
+  { id: 'i', upper: 'I', lower: 'i', ipa: 'ɪ', soundHe: 'אִ קצרה, כמו בתחילת ink', example: 'ink', exampleHe: 'דיו', picture: 'ink', carrier: { word: 'it', part: 'vowel' } },
   { id: 'j', upper: 'J', lower: 'j', ipa: 'dʒ', soundHe: "ג׳ כמו בג׳ירפה", example: 'jam', exampleHe: 'ריבה', picture: 'jam', carrier: { word: 'jet', part: 'onset' } },
   { id: 'k', upper: 'K', lower: 'k', ipa: 'k', soundHe: 'ק׳ קצרה', example: 'kite', exampleHe: 'עפיפון', picture: 'kite', carrier: { word: 'cap', part: 'onset' } },
   { id: 'l', upper: 'L', lower: 'l', ipa: 'l', soundHe: 'ל׳ ארוכה (לְלְלְ)', example: 'lemon', exampleHe: 'לימון', picture: 'lemon', carrier: { word: 'lap', part: 'onset' } },

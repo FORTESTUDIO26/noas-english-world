@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { LETTERS } from '../content/letters.ts';
 import { NUMBERS } from '../content/numbers.ts';
 import { COLORS } from '../content/colors.ts';
@@ -13,12 +13,6 @@ import { useProfile } from '../state/profileCtx.tsx';
 import { T } from '../text/he.ts';
 import { Screen } from '../ui/Screen.tsx';
 import { GameRunner } from './GameRunner.tsx';
-import { audio } from '../audio/player.ts';
-import { clipId } from '../audio/clips.ts';
-import { saveRecording, deleteRecording, listRecordingIds } from '../audio/recordings.ts';
-import ttsAudit from '../audio/tts-audit.json';
-import phonemeAudit from '../audio/phoneme-audit.json';
-import { IconMic, IconSpeaker } from '../ui/icons.tsx';
 
 const M_HE: Record<Mastery, string> = T.parents.m;
 
@@ -48,7 +42,7 @@ export function ParentsScreen() {
   if (quick) {
     return (
       <Screen title={P.quickTitle} tone="purple">
-        <GameRunner questions={quickQs} title={P.quickTitle} onExit={() => setQuick(false)} onFinish={() => setQuick(false)} finishLabel={P.backToParents} />
+        <GameRunner questions={quickQs} title={P.quickTitle} onExit={() => setQuick(false)} onFinish={() => setQuick(false)} finishLabel={P.backToParents} introKey="review" />
       </Screen>
     );
   }
@@ -168,106 +162,8 @@ function worse(a: Mastery, b: Mastery): Mastery {
   return order[Math.min(order.indexOf(a), order.indexOf(b))];
 }
 
-// ------------------------------------------------------------------ sound check
-
-const REVIEW_KEY = 'noa-english:phoneme-review';
-type Review = Record<string, 'ok' | 'bad'>;
-function loadReview(): Review {
-  try { return JSON.parse(localStorage.getItem(REVIEW_KEY) ?? '{}'); } catch { return {}; }
-}
-
-export function SoundCheckScreen() {
-  const [review, setReview] = useState<Review>(loadReview);
-  const [recs, setRecs] = useState<string[]>([]);
-  const [recording, setRecording] = useState<string | null>(null);
-  const [err, setErr] = useState<string | null>(null);
-  const mr = useRef<MediaRecorder | null>(null);
-  useEffect(() => { void listRecordingIds().then(setRecs); }, []);
-  useEffect(() => { try { localStorage.setItem(REVIEW_KEY, JSON.stringify(review)); } catch { /* ignore */ } }, [review]);
-
-  const record = async (id: string) => {
-    setErr(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const rec = new MediaRecorder(stream);
-      const chunks: Blob[] = [];
-      rec.ondataavailable = (e) => chunks.push(e.data);
-      rec.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop());
-        const blob = new Blob(chunks, { type: rec.mimeType || 'audio/mp4' });
-        const trimmed = await trimSilence(blob).catch(() => blob);
-        await saveRecording(clipId.phoneme(id), trimmed);
-        setRecs(await listRecordingIds());
-        setRecording(null);
-        void audio.play(clipId.phoneme(id));
-      };
-      mr.current = rec;
-      setRecording(id);
-      rec.start();
-      setTimeout(() => rec.state === 'recording' && rec.stop(), 2000);
-    } catch {
-      setErr(T.sound.micDenied);
-      setRecording(null);
-    }
-  };
-
-  const unconfirmed = ttsAudit.unconfirmed;
-  return (
-    <Screen title={T.sound.title} tone="blue" noSlow>
-      <div className="parents">
-        <section className="p-card">
-          <h2>{T.sound.phonTitle}</h2>
-          <p>{T.sound.phonLead}</p>
-          {err && <p className="warn">{err}</p>}
-          <table className="sound-table">
-            <thead><tr>{T.sound.cols.map((c) => <th key={c}>{c}</th>)}</tr></thead>
-            <tbody>
-              {phonemeAudit.map((p) => {
-                const hasRec = recs.includes(clipId.phoneme(p.id));
-                const l = LETTERS.find((x) => x.id === p.id);
-                return (
-                  <tr key={p.id} className={review[p.id] === 'ok' ? 'is-ok' : review[p.id] === 'bad' ? 'is-bad' : ''}>
-                    <td dir="ltr"><b>{l ? l.upper + l.lower : p.id}</b>{!l && <small>{T.sound.forWords}</small>}</td>
-                    <td dir="ltr">/{p.ipa}/</td>
-                    <td><small>{hasRec ? T.sound.yourRec : <>{T.sound.from} <span dir="ltr" lang="en">{p.carrier}</span></>}</small></td>
-                    <td>
-                      <button type="button" className="btn btn--icon" onClick={() => void audio.play(clipId.phoneme(p.id))} aria-label={T.common.play}><IconSpeaker /></button>
-                      {l && <button type="button" className="btn btn--icon btn--small" onClick={() => void audio.play(clipId.word(l.example))} aria-label={T.sound.exampleWord}><span dir="ltr" lang="en">{l.example}</span></button>}
-                    </td>
-                    <td className="nowrap">
-                      <button type="button" className={`btn btn--small ${review[p.id] === 'ok' ? 'btn--primary' : 'btn--ghost'}`} onClick={() => setReview({ ...review, [p.id]: 'ok' })}>{T.sound.ok}</button>
-                      <button type="button" className={`btn btn--small ${review[p.id] === 'bad' ? 'btn--danger' : 'btn--ghost'}`} onClick={() => setReview({ ...review, [p.id]: 'bad' })}>{T.sound.bad}</button>
-                    </td>
-                    <td className="nowrap">
-                      <button type="button" className={`btn btn--small btn--ghost ${recording === p.id ? 'is-rec' : ''}`} disabled={!!recording} onClick={() => void record(p.id)}><IconMic /> {recording === p.id ? T.sound.recording : T.sound.record}</button>
-                      {hasRec && <button type="button" className="btn btn--small btn--ghost" onClick={async () => { await deleteRecording(clipId.phoneme(p.id)); setRecs(await listRecordingIds()); }}>{T.sound.del}</button>}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <p className="small">{T.sound.approved(Object.values(review).filter((x) => x === 'ok').length, phonemeAudit.length)}</p>
-        </section>
-
-        <section className="p-card">
-          <h2>{T.sound.autoTitle}</h2>
-          <p>{T.sound.autoLead(ttsAudit.total, ttsAudit.checkedAt, ttsAudit.confirmed)}</p>
-          <ul className="chips">
-            {unconfirmed.map((u) => (
-              <li key={u.id + u.slow}>
-                <button type="button" className="chip-btn" onClick={() => void audio.play(u.id, { slow: u.slow })} dir="ltr">🔊 {u.id}{u.slow ? ' (slow)' : ''}</button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
-    </Screen>
-  );
-}
-
 /** Trim silence from a recording and return it as WAV (plays everywhere, incl. Safari). */
-async function trimSilence(blob: Blob): Promise<Blob> {
+export async function trimSilence(blob: Blob): Promise<Blob> {
   const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
   const ctx = new AC();
   const data = await blob.arrayBuffer();

@@ -5,7 +5,7 @@ import { clipId } from '../audio/clips.ts';
 import { Picture } from '../art/pictures.tsx';
 import { Screen } from '../ui/Screen.tsx';
 import { Speaker } from '../ui/Speaker.tsx';
-import { TracePad } from '../ui/TracePad.tsx';
+import { HandwritingPad, writeMessage } from '../ui/HandwritingPad.tsx';
 import { QuestionView } from '../ui/QuestionView.tsx';
 import { useNav } from '../state/nav.tsx';
 import { useStore } from '../state/store.tsx';
@@ -65,7 +65,7 @@ export function LetterLesson({ id, onHeard }: { id: LetterId; onHeard?: (what: '
   const l = letter(id);
   const { answer, markOpened } = useStore();
   const [traceCase, setTraceCase] = useState<'upper' | 'lower'>('upper');
-  const [traceMsg, setTraceMsg] = useState<string | null>(null);
+  const [traceMsg, setTraceMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [traceKey, setTraceKey] = useState(0);
   const quiz = useMemo(() => qLetterName(id), [id]);
   const [quizDone, setQuizDone] = useState(false);
@@ -83,10 +83,14 @@ export function LetterLesson({ id, onHeard }: { id: LetterId; onHeard?: (what: '
             <Speaker clips={[clipId.letterName(id)]} label={T.letters.name} size="m" withSlow />
           </span>
           <span onClick={() => onHeard?.('sound')}>
-            <Speaker clips={[clipId.phoneme(id)]} label={T.letters.sound} size="m" withSlow className="speaker-wrap--sound" />
+            <Speaker clips={[clipId.phoneme(id)]} label={T.letters.sound} size="m" className="speaker-wrap--sound" />
           </span>
           <Speaker clips={[clipId.word(l.example)]} label={T.letters.example} size="m" withSlow />
         </div>
+        {/* name – pause – sound – pause – word, so the difference between name and sound is heard */}
+        <span className="lesson__all" onClick={() => { onHeard?.('name'); onHeard?.('sound'); }}>
+          <Speaker clips={[clipId.letterName(id), clipId.phoneme(id), clipId.word(l.example)]} gapMs={850} label={T.letters.all} size="l" className="speaker-wrap--all" />
+        </span>
       </div>
       <div className="lesson__example">
         <Picture id={l.picture} size={120} label={l.exampleHe} />
@@ -100,12 +104,12 @@ export function LetterLesson({ id, onHeard }: { id: LetterId; onHeard?: (what: '
           <button type="button" className={traceCase === 'upper' ? 'is-on' : ''} onClick={() => { setTraceCase('upper'); setTraceMsg(null); setTraceKey((k) => k + 1); }} aria-pressed={traceCase === 'upper'}>{T.letters.upper} <span lang="en" dir="ltr">{l.upper}</span></button>
           <button type="button" className={traceCase === 'lower' ? 'is-on' : ''} onClick={() => { setTraceCase('lower'); setTraceMsg(null); setTraceKey((k) => k + 1); }} aria-pressed={traceCase === 'lower'}>{T.letters.lower} <span lang="en" dir="ltr">{l.lower}</span></button>
         </div>
-        <TracePad key={`${id}-${traceCase}-${traceKey}`} glyph={traceCase === 'upper' ? l.upper : l.lower} onDone={(s) => {
-          answer(skillKey('letterWrite', id), s.ok);
-          setTraceMsg(s.ok ? T.letters.traceGood : s.coverage < 0.6 ? T.letters.traceMore : T.letters.traceInside);
-          if (!s.ok) setTimeout(() => setTraceKey((k) => k + 1), 1200);
+        <HandwritingPad key={`${id}-${traceCase}-${traceKey}`} letter={id} which={traceCase} onResult={(r) => {
+          answer(skillKey('letterWrite', id), r.ok);
+          setTraceMsg({ ok: r.ok, text: writeMessage(r) });
         }} />
-        {traceMsg && <p className="hint">{traceMsg}</p>}
+        {traceMsg && <p className={`hint ${traceMsg.ok ? 'hint--good' : 'hint--oops'}`} role="status">{traceMsg.text}</p>}
+        {traceMsg && !traceMsg.ok && <button type="button" className="link-btn link-btn--center" onClick={() => { setTraceMsg(null); setTraceKey((k) => k + 1); }}>{T.write.retry}</button>}
       </section>
 
       <section className="lesson__section">

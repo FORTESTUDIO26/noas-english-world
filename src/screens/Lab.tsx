@@ -32,7 +32,7 @@ export function LabScreen() {
         </div>
       ) : (
         <GameRunner key={round} questions={questions} title={mode === 'lab-learn' ? T.lab.runLearn : T.lab.runTest} mode={mode}
-          onExit={() => setMode(null)} onFinish={() => { setMode(null); setRound(round + 1); }} finishLabel={T.lab.backToLab} />
+          onExit={() => setMode(null)} onFinish={() => { setMode(null); setRound(round + 1); }} finishLabel={T.lab.backToLab} introKey="lab" />
       )}
     </Screen>
   );

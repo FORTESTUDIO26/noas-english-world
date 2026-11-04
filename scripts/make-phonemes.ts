@@ -82,7 +82,8 @@ function cut(p: Pcm, fr: Frame[], part: 'onset' | 'vowel' | 'coda', ipa: string)
     let k = v0 + 8;
     if (ipa === 'f') {
       while (k < end && !(fr[k].zcr > 0.25 && fr[k].voice < VOICED)) k++;
-      return { from: k, to: end + 2, note: `fricative ${((end - k) * HOP * 1000).toFixed(0)}ms` };
+      while (k < end && fr[k].voice > VOICED) k++;
+      return { from: k + 3, to: end + 2, note: `fricative ${((end - k) * HOP * 1000).toFixed(0)}ms` };
     }
     // nasal murmur: voiced, low zero-crossing (low-frequency hum) after the vowel
     void vmax;
@@ -95,7 +96,10 @@ function cut(p: Pcm, fr: Frame[], part: 'onset' | 'vowel' | 'coda', ipa: string)
   // onset
   const v0 = voicingFrom(start);
   if (['p', 'k', 't', 'h'].includes(ipa)) {
-    return { from: Math.max(0, start - 2), to: Math.max(start + 10, v0 - 3), note: `voiceless ${((v0 - start) * HOP * 1000).toFixed(0)}ms` };
+    let firstVoiced = v0;
+    for (let k = start + 2; k < v0; k++) if (fr[k].voice > VOICED && fr[k].db > peak - 32) { firstVoiced = k; break; }
+    const to = Math.max(start + 8, Math.min(v0 - 3, firstVoiced - 2));
+    return { from: Math.max(0, start - 2), to, note: `voiceless ${((to - start) * HOP * 1000).toFixed(0)}ms` };
   }
   if (ipa === 'dʒ') {
     let k = start;
@@ -159,47 +163,98 @@ function stretch(seg: Float32Array, rate: number, targetSec: number): Float32Arr
   return Float32Array.from(out);
 }
 
-function render(p: Pcm, from: number, to: number, holdSec = 0): Pcm {
+// ---------------------------------------------------------------- v2 rendering (2026-11-04)
+// Problem in v1: plosives were single 45–70 ms blips and vowels 120–215 ms,
+// too short to hear on a phone speaker. v2 keeps every sound natural (no
+// added "uh", no stretched plosives) but presents it the way teachers do:
+//  - short sounds (b c d g k p t h j) are played three times: "b · b · b"
+//  - vowels and continuous sounds (a e i o / f l m n) are held, continuous
+//  - loudness is matched across all sounds
+type Kind = 'burst' | 'vowel' | 'hold';
+const kindOf = (ipa: string): Kind => (['æ', 'ɛ', 'ɪ', 'ɑ'].includes(ipa) ? 'vowel' : ['f', 'l', 'm', 'n'].includes(ipa) ? 'hold' : 'burst');
+
+function slice(p: Pcm, from: number, to: number): Float32Array {
   const hop = HOP * p.rate;
   const a = Math.max(0, Math.round(from * hop));
   const b = Math.min(p.data.length, Math.round(to * hop + WIN * p.rate));
-  const seg = holdSec ? stretch(p.data.slice(a, b), p.rate, holdSec) : p.data.slice(a, b);
-  const fadeIn = Math.round(0.006 * p.rate);
-  const fadeOut = Math.round(0.02 * p.rate);
-  for (let i = 0; i < fadeIn && i < seg.length; i++) seg[i] *= i / fadeIn;
-  for (let i = 0; i < fadeOut && i < seg.length; i++) seg[seg.length - 1 - i] *= i / fadeOut;
+  return p.data.slice(a, b);
+}
+
+function fade(seg: Float32Array, rate: number, inS = 0.006, outS = 0.025) {
+  const fi = Math.round(inS * rate);
+  const fo = Math.round(outS * rate);
+  for (let i = 0; i < fi && i < seg.length; i++) seg[i] *= i / fi;
+  for (let i = 0; i < fo && i < seg.length; i++) seg[seg.length - 1 - i] *= i / fo;
+  return seg;
+}
+
+/** Same perceived level for every sound: RMS target, peak limited. */
+function level(seg: Float32Array, kind: Kind) {
   let pk = 0;
-  for (const x of seg) pk = Math.max(pk, Math.abs(x));
-  const gain = pk > 0 ? 0.8 / pk : 1;
-  const pad = Math.round(0.06 * p.rate);
-  const out = new Float32Array(seg.length + pad * 2);
-  for (let i = 0; i < seg.length; i++) out[pad + i] = seg[i] * gain;
-  return { data: out, rate: p.rate };
+  let e = 0;
+  for (const x of seg) { pk = Math.max(pk, Math.abs(x)); e += x * x; }
+  const rms = Math.sqrt(e / Math.max(1, seg.length));
+  // bursts are mostly silence-free but short: aim at the peak instead
+  const g = kind === 'burst' ? 0.9 / (pk || 1) : Math.min(0.13 / (rms || 1), 0.95 / (pk || 1));
+  for (let i = 0; i < seg.length; i++) seg[i] *= g;
+  return seg;
+}
+
+function renderV2(p: Pcm, from: number, to: number, kind: Kind): Pcm {
+  const r = p.rate;
+  let seg = slice(p, from, to);
+  if (kind === 'vowel') seg = stretch(seg, r, 0.38);
+  if (kind === 'hold') seg = stretch(seg, r, 0.48);
+  seg = level(fade(seg, r, 0.006, kind === 'burst' ? 0.015 : 0.04), kind);
+  const pad = Math.round(0.08 * r);
+  const parts: Float32Array[] = [new Float32Array(pad)];
+  if (kind === 'burst') {
+    const gap = new Float32Array(Math.round(0.34 * r));
+    parts.push(seg, gap, seg, gap, seg);
+  } else parts.push(seg);
+  parts.push(new Float32Array(pad));
+  const out = new Float32Array(parts.reduce((s, x) => s + x.length, 0));
+  let o = 0;
+  for (const x of parts) { out.set(x, o); o += x.length; }
+  return { data: out, rate: r };
 }
 
 const report: Record<string, unknown>[] = [];
 fs.mkdirSync(path.join(ROOT, 'public', 'audio', 'phonemes'), { recursive: true });
 for (const ph of buildPhonemeClips()) {
-  const src = path.join(ROOT, 'scripts', '.carriers', `${ph.carrier.word}.mp3`);
-  const pcm = await decodeMp3(src);
-  const fr = analyse(pcm);
-  const c = cut(pcm, fr, ph.carrier.part, ph.ipa);
-  const hold = ['m', 'n', 'l', 'f'].includes(ph.ipa) ? 0.32 : 0;
-  const outPcm = render(pcm, c.from, c.to, hold);
+  // Two takes of the carrier word (slow -40% and normal -20%): use the one whose
+  // cut passes the checks, preferring the longer clean vowel / held sound.
+  const takes = [path.join(ROOT, 'scripts', '.carriers-slow', `${ph.carrier.word}.mp3`), path.join(ROOT, 'scripts', '.carriers', `${ph.carrier.word}.mp3`)].filter((x) => fs.existsSync(x));
+  const cands = [];
+  for (const src of takes) {
+    const p = await decodeMp3(src);
+    const f2 = analyse(p);
+    const cc = cut(p, f2, ph.carrier.part, ph.ipa);
+    const sg = f2.slice(cc.from, cc.to);
+    const vt = sg.slice(-Math.max(1, Math.floor(sg.length * 0.4))).filter((x) => x.voice > VOICED).length;
+    const clean = ['p', 'k', 't', 'h', 'f'].includes(ph.ipa) ? vt <= 2 : true;
+    cands.push({ src, pcm: p, fr: f2, c: cc, clean, len: cc.to - cc.from });
+  }
+  cands.sort((x, y) => Number(y.clean) - Number(x.clean) || (kindOf(ph.ipa) === 'burst' ? 0 : y.len - x.len));
+  const { pcm, fr, c } = cands[0];
+  const kind = kindOf(ph.ipa);
+  const outPcm = renderV2(pcm, c.from, c.to, kind);
   fs.writeFileSync(path.join(ROOT, 'public', phonemePath(ph.id)), wavBytes(outPcm));
-  // automatic checks on the cut itself
   const seg = fr.slice(c.from, c.to);
   const voicedTail = seg.slice(-Math.max(1, Math.floor(seg.length * 0.4))).filter((f) => f.voice > VOICED).length;
-  const durMs = Math.round((c.to - c.from) * HOP * 1000);
+  const cutMs = Math.round((c.to - c.from) * HOP * 1000);
+  const totalMs = Math.round((outPcm.data.length / outPcm.rate) * 1000);
   const voiceless = ['p', 'k', 't', 'h', 'f'].includes(ph.ipa);
   const checks = {
-    durationOk: ph.carrier.part === 'vowel' ? durMs >= 80 && durMs <= 360 : durMs >= 25 && durMs <= 400,
+    cutLengthOk: kind === 'vowel' ? cutMs >= 80 && cutMs <= 400 : cutMs >= 25 && cutMs <= 400,
     noVowelAfterVoiceless: voiceless ? voicedTail <= 2 : true,
-    shortVowelTailForStops: ['b', 'd', 'g'].includes(ph.ipa) ? durMs <= 140 : true,
+    noVowelAfterVoicedStop: ['b', 'd', 'g'].includes(ph.ipa) ? cutMs <= 140 : true,
+    audibleLength: totalMs >= 350,
   };
-  report.push({ id: ph.id, ipa: ph.ipa, carrier: ph.carrier, durMs, heldMs: hold ? Math.round(outPcm.data.length / outPcm.rate * 1000) - 120 : undefined, note: c.note, checks, autoOk: Object.values(checks).every(Boolean) });
-  console.log(`${ph.id.padEnd(2)} /${ph.ipa}/ from "${ph.carrier.word}" ${ph.carrier.part.padEnd(5)} ${String(durMs).padStart(4)}ms  ${c.note}  ${Object.values(checks).every(Boolean) ? 'auto-check ok' : 'CHECK ' + JSON.stringify(checks)}`);
+  const autoOk = Object.values(checks).every(Boolean);
+  report.push({ id: ph.id, ipa: ph.ipa, carrier: ph.carrier, kind, cutMs, totalMs, note: c.note, checks, autoOk, humanApproved: false });
+  console.log(`${ph.id.padEnd(2)} /${ph.ipa}/ ${kind.padEnd(5)} from "${ph.carrier.word}" cut ${String(cutMs).padStart(3)}ms → file ${totalMs}ms  ${autoOk ? 'auto-check ok' : 'CHECK ' + JSON.stringify(checks)}`);
 }
 freeDecoder();
 fs.writeFileSync(path.join(ROOT, 'scripts', 'phoneme-report.json'), JSON.stringify(report, null, 1));
-fs.writeFileSync(path.join(ROOT, 'src', 'audio', 'phoneme-audit.json'), JSON.stringify(report.map((r) => ({ id: r.id, ipa: r.ipa, carrier: (r.carrier as { word: string }).word, autoOk: r.autoOk })), null, 1));
+fs.writeFileSync(path.join(ROOT, 'src', 'audio', 'phoneme-audit.json'), JSON.stringify(report.map((r) => ({ id: r.id, ipa: r.ipa, carrier: (r.carrier as { word: string }).word, kind: r.kind, cutMs: r.cutMs, totalMs: r.totalMs, autoOk: r.autoOk, humanApproved: false })), null, 1));

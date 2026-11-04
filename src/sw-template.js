@@ -7,7 +7,9 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE).then(async (cache) => {
       // Add in small batches so a slow phone doesn't give up on hundreds of clips.
       for (let i = 0; i < FILES.length; i += 25) {
-        await cache.addAll(FILES.slice(i, i + 25));
+        // cache: 'reload' bypasses the browser's HTTP cache, so a new version
+        // never stores an older copy of a sound that kept the same file name.
+        await cache.addAll(FILES.slice(i, i + 25).map((u) => new Request(u, { cache: 'reload' })));
       }
     }),
   );

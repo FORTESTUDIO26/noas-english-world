@@ -4,10 +4,23 @@
 const DB = 'noa-english-audio';
 const STORE = 'recordings';
 
+/**
+ * Version of the shipped phonics sounds. A parent recording made for an older
+ * version is kept (never deleted automatically) but not played, so it cannot
+ * hide the corrected files. The sound check screen can re-activate it.
+ */
+export const PHONEME_VERSION = 2;
+
 export interface Recording {
   id: string;
   blob: Blob;
   savedAt: number;
+  /** PHONEME_VERSION the recording was made (or re-activated) for */
+  forVersion?: number;
+}
+
+export function recordingIsCurrent(r: Recording) {
+  return !r.id.startsWith('sound-') || r.forVersion === PHONEME_VERSION;
 }
 
 function open(): Promise<IDBDatabase> {
@@ -46,9 +59,23 @@ export async function listRecordingIds(): Promise<string[]> {
 }
 
 export async function saveRecording(id: string, blob: Blob) {
-  await tx('readwrite', (s) => s.put({ id, blob, savedAt: Date.now() } satisfies Recording));
+  await tx('readwrite', (s) => s.put({ id, blob, savedAt: Date.now(), forVersion: PHONEME_VERSION } satisfies Recording));
 }
 
 export async function deleteRecording(id: string) {
   await tx('readwrite', (s) => s.delete(id));
+}
+
+/** Use an older recording again with the current version (parent's explicit choice). */
+export async function reactivateRecording(id: string) {
+  const r = await getRecording(id);
+  if (r) await tx('readwrite', (s) => s.put({ ...r, forVersion: PHONEME_VERSION } satisfies Recording));
+}
+
+export async function listRecordings(): Promise<Recording[]> {
+  try {
+    return await tx<Recording[]>('readonly', (s) => s.getAll());
+  } catch {
+    return [];
+  }
 }

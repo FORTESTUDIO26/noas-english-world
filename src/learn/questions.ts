@@ -128,8 +128,8 @@ export function qLetterName(id: LetterId, rnd: Rnd = Math.random, pool: LetterId
   const ans = L(l.upper);
   return {
     kind: 'choice', id: qid('ln'), area: 'letterNames', skill: skillKey('letterName', id), listening: true,
-    prompt: { audio: [clipId.findLetter(id)], he: T.q.letterName, en: `Find the letter ${l.upper}.`, helpHe: T.q.letterNameHelp },
-    ...choice(ans, others, rnd), explainHe: T.q.letterNameExplain(l.upper), afterAudio: clipId.letterName(id), bigOptions: true,
+    prompt: { audio: [clipId.letterName(id)], he: T.q.letterName, helpHe: T.q.letterNameHelp },
+    ...choice(ans, others, rnd), explainHe: T.q.letterNameExplain(id), afterAudio: clipId.letterName(id), bigOptions: true,
   };
 }
 
@@ -140,7 +140,7 @@ export function qLetterSound(id: LetterId, rnd: Rnd = Math.random, pool: LetterI
   const ans = L(l.upper);
   return {
     kind: 'choice', id: qid('ls'), area: 'phonics', skill: skillKey('letterSound', id), listening: true,
-    prompt: { audio: [clipId.prompt('whichSound'), clipId.phoneme(id)], he: T.q.letterSound, en: 'Which letter makes this sound?', helpHe: T.q.letterSoundHelp },
+    prompt: { audio: [clipId.phoneme(id)], he: T.q.letterSound, helpHe: T.q.letterSoundHelp },
     showAudio: clipId.phoneme(id), show: { t: 'audio', clip: clipId.phoneme(id) },
     ...choice(ans, others, rnd), explainHe: T.q.letterSoundExplain(l.upper, l.ipa, l.example), afterAudio: clipId.word(l.example), bigOptions: true,
   };
@@ -154,7 +154,7 @@ export function qLetterLookAlike(id: LetterId, rnd: Rnd = Math.random): ChoiceQ 
   const ans = L(l.lower);
   return {
     kind: 'choice', id: qid('lk'), area: 'letterNames', skill: skillKey('letterName', id), listening: true,
-    prompt: { audio: [clipId.findLetter(id)], he: T.q.lookAlike, en: `Find the letter ${l.upper}.`, helpHe: T.q.lookAlikeHelp },
+    prompt: { audio: [clipId.letterName(id)], he: T.q.lookAlike, helpHe: T.q.lookAlikeHelp },
     ...choice(ans, others, rnd), explainHe: T.q.lookAlikeExplain(l.lower, l.upper), afterAudio: clipId.letterName(id), bigOptions: true,
   };
 }
@@ -162,7 +162,7 @@ export function qLetterLookAlike(id: LetterId, rnd: Rnd = Math.random): ChoiceQ 
 export function qLetterPairs(ids: LetterId[], rnd: Rnd = Math.random): PairsQ {
   return {
     kind: 'pairs', id: qid('lp'), area: 'letterCase',
-    prompt: { audio: [clipId.prompt('matchLetters')], he: T.q.pairs, en: 'Match the big and small letters.' },
+    prompt: { audio: [], he: T.q.pairs },
     pairs: shuffle(ids, rnd).slice(0, 4).map((id) => ({ left: L(letter(id).upper), right: L(letter(id).lower), skill: skillKey('letterCase', id), leftAudio: clipId.letterName(id) })),
     explainHe: T.q.pairsExplain,
   };
@@ -174,7 +174,7 @@ export function qUpperToLower(id: LetterId, rnd: Rnd = Math.random): ChoiceQ {
   const others = [...near, ...distractors(LETTERS.map((x) => x.id), id, 2 - near.length, rnd, (x) => near.includes(x))].map((o) => L(letter(o).lower));
   return {
     kind: 'choice', id: qid('ul'), area: 'letterCase', skill: skillKey('letterCase', id),
-    prompt: { audio: [], he: T.q.upperToLower(l.upper) },
+    prompt: { audio: [], he: T.q.upperToLower(id) },
     show: L(l.upper), showAudio: clipId.letterName(id),
     ...choice(L(l.lower), others, rnd), explainHe: T.q.upperToLowerExplain(l.upper, l.lower), afterAudio: clipId.letterName(id), bigOptions: true,
   };
@@ -194,7 +194,7 @@ export function qMissingLetter(rnd: Rnd = Math.random, range: LetterId[] = LETTE
   const others = distractors(all, ansId, 2, rnd, (x) => run.includes(x)).map((o) => L(fmt(o)));
   return {
     kind: 'choice', id: qid('ms'), area: 'letters', skill: skillKey('letterSeq', ansId),
-    prompt: { audio: [clipId.prompt('missingLetter')], he: T.q.missing, en: 'Which letter is missing?' },
+    prompt: { audio: [], he: T.q.missing },
     show: { t: 'seq', items: run.map((id, i) => (i === gap ? null : fmt(id))) },
     ...choice(L(fmt(ansId)), others, rnd), explainHe: T.q.missingExplain(run.map(fmt).join(' ')), afterAudio: clipId.letterName(ansId), bigOptions: true,
   };
@@ -213,17 +213,16 @@ export function qFirstLetter(w: string, rnd: Rnd = Math.random): ChoiceQ {
   const isVocab = WORDS.some((x) => x.id === w);
   return {
     kind: 'choice', id: qid('fl'), area: 'phonics', skill: isVocab ? skillKey('wordFirst', w) : skillKey('letterSound', item.first),
-    prompt: { audio: [clipId.word(w), clipId.prompt('firstLetter')], he: T.q.firstLetter, en: 'Which letter does it start with?', helpHe: T.q.firstLetterHelp },
+    prompt: { audio: [clipId.word(w)], he: T.q.firstLetter, helpHe: T.q.firstLetterHelp },
     show: { t: 'picture', id: item.picture }, showAudio: clipId.word(w),
     ...choice(L(l.lower), others, rnd), explainHe: T.q.firstLetterExplain(w, l.ipa, l.upper, l.lower), bigOptions: true,
   };
 }
 
 export function qTrace(id: LetterId, which: 'upper' | 'lower'): TraceQ {
-  const l = letter(id);
   return {
     kind: 'trace', id: qid('tr'), area: 'writing', letter: id, case: which, skill: skillKey('letterWrite', id),
-    prompt: { audio: [clipId.prompt('trace'), clipId.letterName(id)], he: T.q.trace(which === 'upper' ? l.upper : l.lower), en: 'Trace the letter.' },
+    prompt: { audio: [clipId.letterName(id)], he: which === 'upper' ? T.q.traceUpper : T.q.traceLower },
     explainHe: T.q.traceExplain,
   };
 }
@@ -244,7 +243,9 @@ export function qHearNumber(n: number, rnd: Rnd = Math.random, style: 'plain' | 
   const en = style === 'touch' ? `Touch number ${numberWord(n)}.` : style === 'find' ? `Find number ${numberWord(n)}.` : `${numberWord(n)}`;
   return {
     kind: 'choice', id: qid('hn'), area: 'listening', skill: skillKey('number', n), listening: true,
-    prompt: { audio: [audio], he: T.q.hearNumber, en, helpHe: T.q.hearNumberHelp },
+    prompt: style === 'plain'
+      ? { audio: [audio], he: T.q.hearNumber, en, helpHe: T.q.hearNumberHelp }
+      : { audio: [audio], he: T.q.listenDo, en, helpHe: T.q.listenDoHelp },
     ...choice(N(n), numberDistractors(n, optionCount - 1, rnd).map(N), rnd),
     explainHe: `${numberWord(n)} = ${n}`, afterAudio: clipId.number(n), bigOptions: true,
   };
@@ -269,7 +270,7 @@ export function qCount(n: number, rnd: Rnd = Math.random): ChoiceQ {
   const others = shuffle([n - 2, n - 1, n + 1, n + 2].filter((x) => x >= 1 && x <= 20), rnd).slice(0, 2);
   return {
     kind: 'choice', id: qid('cn'), area: 'numbers', skill: skillKey('count', n),
-    prompt: { audio: [clipId.prompt('countHowMany')], he: T.q.count, en: 'Count. How many?' },
+    prompt: { audio: [], he: T.q.count },
     show: { t: 'count', n, thing },
     ...choice(N(n), others.map(N), rnd), explainHe: T.q.countExplain(n, numberWord(n)), afterAudio: clipId.number(n), bigOptions: true,
   };
@@ -303,7 +304,9 @@ export function qHearColor(id: ColorId, rnd: Rnd = Math.random, style: 'plain' |
   const vis = (x: ColorId): Visual => (asThings ? { t: 'thing', id: x } : { t: 'color', id: x });
   return {
     kind: 'choice', id: qid('hc'), area: 'listening', skill: skillKey('color', id), listening: true,
-    prompt: { audio: [style === 'choose' ? clipId.chooseColor(id) : clipId.color(id)], he: T.q.hearColor, en: style === 'choose' ? `Choose the ${id} color.` : id, helpHe: T.q.hearColorHelp },
+    prompt: style === 'choose'
+      ? { audio: [clipId.chooseColor(id)], he: T.q.listenDo, en: `Choose the ${id} color.`, helpHe: T.q.listenDoHelp }
+      : { audio: [clipId.color(id)], he: T.q.hearColor, en: id, helpHe: T.q.hearColorHelp },
     ...choice(vis(id), others.map(vis), rnd), explainHe: `${id} = ${c.he}`, afterAudio: clipId.color(id),
   };
 }
@@ -318,14 +321,23 @@ export function qColorWord(id: ColorId, rnd: Rnd = Math.random): ChoiceQ {
   };
 }
 
-export function qPaint(targets: { thing: WordId; color: ColorId }[], rnd: Rnd = Math.random): PaintQ {
+/**
+ * Colouring by instruction.
+ *  - 'learn': Hebrew sentence with the English words in it ("צבעו את ball בצבע orange"),
+ *    spoken Hebrew + English, then the English sentence; the text is visible.
+ *  - 'listen': only "listen to the English instruction" in Hebrew; the English
+ *    sentence is heard and shown only after answering (listening comprehension).
+ */
+export function qPaint(targets: { thing: WordId; color: ColorId }[], rnd: Rnd = Math.random, mode: 'learn' | 'listen' = 'listen'): PaintQ {
   const used = targets.map((t) => t.color);
   const palette = shuffle([...used, ...distractors(COLORS.map((x) => x.id), used[0], 6 - used.length, rnd, (x) => used.includes(x))], rnd);
   const audio = targets.map((t, i) => (i === 0 ? clipId.colorThing(t.thing, t.color) : clipId.thenColorThing(t.thing, t.color)));
   const en = targets.map((t, i) => `${i === 0 ? 'Color' : 'Now color'} the ${t.thing} ${t.color}.`).join(' ');
   return {
-    kind: 'paint', id: qid('pt'), area: 'listening', listening: true,
-    prompt: { audio, he: targets.length > 1 ? T.q.paintTwo : T.q.paintOne, en, helpHe: targets.length > 1 ? T.q.paintTwoHelp : T.q.paintOneHelp },
+    kind: 'paint', id: qid('pt'), area: mode === 'learn' ? 'colors' : 'listening', listening: mode === 'listen',
+    prompt: mode === 'learn'
+      ? { audio, he: targets.length > 1 ? T.q.paintLearnTwo(targets[0].thing, targets[0].color, targets[1].thing, targets[1].color) : T.q.paintLearn(targets[0].thing, targets[0].color), en, helpHe: targets.length > 1 ? T.q.paintTwoHelp : T.q.paintHelp }
+      : { audio, he: targets.length > 1 ? T.q.listenDoTwo : T.q.listenDo, en, helpHe: targets.length > 1 ? T.q.paintTwoHelp : T.q.listenDoHelp },
     targets: targets.map((t) => ({ ...t, skill: targets.length > 1 ? skillKey('listen2', `${t.thing}-${t.color}`) : skillKey('color', t.color) })),
     palette,
     explainHe: targets.map((t) => `${t.thing} (${word(t.thing).he}) – ${t.color} (${color(t.color).he})`).join(' · '),
@@ -385,7 +397,7 @@ export function qWordGap(w: WordId, rnd: Rnd = Math.random): ChoiceQ {
   const others = distractors(LETTERS.map((x) => x.id), ch as LetterId, 2, rnd, (x) => letters.includes(x)).map((o) => L(o));
   return {
     kind: 'choice', id: qid('wg'), area: 'reading', skill: skillKey('wordSpell', w),
-    prompt: { audio: [clipId.word(w)], he: T.q.wordGap, en: 'Which letter is missing?' },
+    prompt: { audio: [clipId.word(w)], he: T.q.wordGap },
     show: { t: 'gap', word: w, gap: i }, showAudio: clipId.word(w),
     ...choice(L(ch), others, rnd), explainHe: `${w} – ${letters.join(' ')}`, afterAudio: clipId.word(w), bigOptions: true,
   };
@@ -427,7 +439,7 @@ export function buildGame(game: GameId, save: Save, count: number, opts: { lette
     case 'hearColor': return cycle(weightedPick(cols, weightOf(save, 'color'), count, rnd), count, rnd).map((c, i) => qHearColor(c, rnd, i % 2 ? 'choose' : 'plain'));
     case 'findColor': return cycle(weightedPick(cols, weightOf(save, 'color'), count, rnd), count, rnd).map((c) => qHearColor(c, rnd, 'choose', true));
     case 'colorWord': return cycle(weightedPick(cols, weightOf(save, 'colorRead'), count, rnd), count, rnd).map((c) => qColorWord(c, rnd));
-    case 'paint': return cycle(weightedPick(cols, weightOf(save, 'color'), count, rnd), count, rnd).map((c) => qPaint([{ thing: pickOne(COLORABLE, rnd), color: c }], rnd));
+    case 'paint': return cycle(weightedPick(cols, weightOf(save, 'color'), count, rnd), count, rnd).map((c) => qPaint([{ thing: pickOne(COLORABLE, rnd), color: c }], rnd, 'learn'));
     case 'wordPicture': return cycle(weightedPick(words, weightOf(save, 'word'), count, rnd), count, rnd).map((w) => qWordToPicture(w, rnd));
     case 'pictureWord': return cycle(weightedPick(words, weightOf(save, 'word'), count, rnd), count, rnd).map((w) => qPictureToWord(w, rnd));
     case 'hearWord': return cycle(weightedPick(words, weightOf(save, 'wordListen'), count, rnd), count, rnd).map((w) => qHearWord(w, rnd));

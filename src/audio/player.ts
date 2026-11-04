@@ -10,11 +10,30 @@
 //    caller gets 'missing' and the UI says so honestly.
 
 import { buildTtsClips, ttsPath, phonemePath, clipId } from './clips.ts';
-import { getRecording } from './recordings.ts';
+import { getRecording, recordingIsCurrent } from './recordings.ts';
+import heClips from './he-clips.json';
 
 export type PlayResult = 'file' | 'recording' | 'device-voice' | 'missing' | 'blocked' | 'stopped';
 
-const TEXT = new Map(buildTtsClips().map((c) => [c.id, c.text]));
+const TEXT = new Map<string, string>([...buildTtsClips().map((c) => [c.id, c.text] as [string, string]), ...Object.entries(heClips as Record<string, string>)]);
+/** Target loudness: every clip is played at about the same level. */
+const TARGET_RMS = 0.09;
+const gainCache = new WeakMap<AudioBuffer, number>();
+function levelGain(buf: AudioBuffer): number {
+  let g = gainCache.get(buf);
+  if (g !== undefined) return g;
+  const d = buf.getChannelData(0);
+  let e = 0, n = 0, pk = 0;
+  for (let i = 0; i < d.length; i += 4) {
+    const a = Math.abs(d[i]);
+    if (a > pk) pk = a;
+    if (a > 0.01) { e += d[i] * d[i]; n++; } // ignore silence
+  }
+  const rms = n ? Math.sqrt(e / n) : 0;
+  g = rms ? Math.min(TARGET_RMS / rms, 0.98 / (pk || 1), 3) : 1;
+  gainCache.set(buf, g);
+  return g;
+}
 const BASE = import.meta.env.BASE_URL;
 
 type Listener = (playingId: string | null) => void;
@@ -130,7 +149,9 @@ class AudioEngine {
       const src = ctx.createBufferSource();
       src.buffer = buf;
       src.playbackRate.value = rate;
-      src.connect(ctx.destination);
+      const gain = ctx.createGain();
+      gain.gain.value = levelGain(buf);
+      src.connect(gain).connect(ctx.destination);
       src.onended = () => resolve();
       this.current = src;
       src.start(0);
@@ -141,8 +162,9 @@ class AudioEngine {
     return new Promise((resolve) => {
       if (typeof speechSynthesis === 'undefined') return resolve(false);
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'en-US';
-      const voice = speechSynthesis.getVoices().find((v) => v.lang === 'en-US') ?? speechSynthesis.getVoices().find((v) => v.lang.startsWith('en'));
+      const he = /[֐-׿]/.test(text);
+      u.lang = he ? 'he-IL' : 'en-US';
+      const voice = speechSynthesis.getVoices().find((v) => v.lang.replace('_', '-') === u.lang) ?? speechSynthesis.getVoices().find((v) => v.lang.startsWith(he ? 'he' : 'en'));
       if (voice) u.voice = voice;
       u.rate = slow ? 0.7 : 0.95;
       u.onend = () => resolve(true);
@@ -152,7 +174,13 @@ class AudioEngine {
   }
 
   /** Play one clip. Resolves when it finishes (or is interrupted). */
-  async play(id: string, opts: { slow?: boolean } = {}): Promise<PlayResult> {
+  play(id: string, opts: { slow?: boolean } = {}): Promise<PlayResult> {
+    const p = this.playInner(id, opts);
+    this.idle = p.then(() => undefined, () => undefined);
+    return p;
+  }
+
+  private async playInner(id: string, opts: { slow?: boolean } = {}): Promise<PlayResult> {
     this.stop();
     const my = this.token;
     this.unlock();
@@ -164,8 +192,28 @@ class AudioEngine {
     return result;
   }
 
-  /** Play several clips one after another, e.g. instruction + "Now color …". */
-  async playSequence(ids: string[], opts: { slow?: boolean; gapMs?: number } = {}): Promise<PlayResult> {
+  private idle: Promise<void> = Promise.resolve();
+
+  /**
+   * Automatic messages (feedback, an instruction after an answer) wait for the
+   * current sound to finish instead of cutting it. A tap by the child, a new
+   * question or leaving the screen still stops everything (stop()).
+   */
+  async enqueue(ids: string[], opts: { slow?: boolean; gapMs?: number } = {}): Promise<PlayResult> {
+    const my = this.token;
+    await this.idle;
+    if (my !== this.token) return 'stopped';
+    return this.playSequence(ids, opts);
+  }
+
+  /** Play several clips one after another, e.g. Hebrew part + English word + Hebrew part. */
+  playSequence(ids: string[], opts: { slow?: boolean; gapMs?: number } = {}): Promise<PlayResult> {
+    const p = this.sequenceInner(ids, opts);
+    this.idle = p.then(() => undefined, () => undefined);
+    return p;
+  }
+
+  private async sequenceInner(ids: string[], opts: { slow?: boolean; gapMs?: number } = {}): Promise<PlayResult> {
     this.stop();
     const my = this.token;
     this.unlock();
@@ -190,22 +238,21 @@ class AudioEngine {
     if (id.startsWith('sound-')) {
       const sound = id.slice(6);
       const rec = await getRecording(id);
-      if (rec) {
+      // Recordings made for an older version of the phonics sounds are kept but not used.
+      if (rec && recordingIsCurrent(rec)) {
         const buf = await this.decode(await rec.blob.arrayBuffer());
         if (buf && my === this.token) {
-          await this.playBuffer(buf, slow ? 0.85 : 1);
+          // phonics sounds are never slowed down (that would distort them)
+          await this.playBuffer(buf);
           return 'recording';
         }
       }
       const buf = await this.load(BASE + phonemePath(sound));
       if (!buf) return 'missing';
       if (my !== this.token) return 'stopped';
-      // A phonics sound is short; "slow" simply repeats it with a pause.
+      // Phonics sounds are never slowed down (that would distort them). Short
+      // sounds are already presented three times in the file: "b · b · b".
       await this.playBuffer(buf);
-      if (slow && my === this.token) {
-        await new Promise((r) => setTimeout(r, 450));
-        if (my === this.token) await this.playBuffer(buf);
-      }
       return 'file';
     }
     const buf = (await this.load(BASE + ttsPath(id, slow))) ?? (slow ? await this.load(BASE + ttsPath(id)) : null);

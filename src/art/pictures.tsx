@@ -103,6 +103,18 @@ const P: Record<string, Draw> = {
       <path d="M4 82 L96 82" {...S} />
     </>
   ),
+  ink: () => (
+    <>
+      {/* ink bottle with a pen nib and an ink drop */}
+      <path d="M30 40 L70 40 L74 84 C74 88 70 90 66 90 L34 90 C30 90 26 88 26 84 Z" fill="#2f4a8a" {...S} />
+      <rect x="36" y="26" width="28" height="14" rx="3" fill="#1d1b22" {...S} />
+      <rect x="34" y="56" width="32" height="20" rx="5" fill="#fff7e6" {...S} strokeWidth={2.5} />
+      <path d="M42 66 C46 60 54 72 58 66" fill="none" stroke="#2f4a8a" strokeWidth={3} strokeLinecap="round" />
+      <path d="M76 8 L86 20 L70 44 L66 40 Z" fill="#ffd23f" {...S} strokeWidth={2.5} />
+      <path d="M70 44 L64 50" {...S} strokeWidth={2.5} />
+      <path d="M18 54 C14 62 14 66 18 68 C22 66 22 62 18 54 Z" fill="#2f7de1" stroke={INK} strokeWidth={2} />
+    </>
+  ),
   jam: () => (
     <>
       <rect x="26" y="22" width="48" height="14" rx="4" fill="#ff72b6" {...S} />
